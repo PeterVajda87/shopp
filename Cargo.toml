@@ -6,3 +6,7 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+ntex = { version = "*", features = ["async-std"] }
+sqlx = { version = "*", features = ["runtime-async-std", "tls-native-tls"] }
+opentelemetry = { version = "*", features = ["trace"] }
+opentelemetry-stdout = { version = "*", features = ["trace"] }
