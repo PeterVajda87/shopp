@@ -8,5 +8,4 @@ edition = "2021"
 [dependencies]
 ntex = { version = "*", features = ["async-std"] }
 sqlx = { version = "*", features = ["runtime-async-std", "tls-native-tls"] }
-opentelemetry = { version = "*", features = ["trace"] }
-opentelemetry-stdout = { version = "*", features = ["trace"] }
+tracing = { version = "*" }
