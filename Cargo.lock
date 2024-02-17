@@ -1859,6 +1859,7 @@ dependencies = [
 name = "shopp"
 version = "0.1.0"
 dependencies = [
+ "async-std",
  "ntex",
  "sqlx",
  "tracing",
