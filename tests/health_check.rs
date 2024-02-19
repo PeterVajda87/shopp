@@ -9,6 +9,7 @@ async fn health_check_works() {
         .header("content-type", "text/plain")
         .to_request();
     let resp = test::call_service(&app, req).await;
-
+    // This is in fact testing only the application logic
+    // May be wise to spawn separate http server instance
     assert!(resp.status().is_success());
 }
