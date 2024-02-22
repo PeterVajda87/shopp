@@ -9,7 +9,22 @@ async fn health_check_works() {
         .header("content-type", "text/plain")
         .to_request();
     let resp = test::call_service(&app, req).await;
-    // This is in fact testing only the application logic
-    // May be wise to spawn separate http server instance
     assert!(resp.status().is_success());
+}
+
+#[ntex::test]
+async fn spawn_server_works() {
+    spawn_server();
+    let _ = std::process::Command::new("curl")
+        .arg("http://127.0.0.1:8000/health_check")
+        .arg("-vvv")
+        .spawn()
+        .expect("Failed to execute command.")
+        .wait()
+        .expect("Failed to wait");
+}
+
+fn spawn_server() {
+    let server = shopp::run().expect("Failed to start server.");
+    let _ = async_std::task::spawn(server);
 }

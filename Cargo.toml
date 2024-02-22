@@ -14,6 +14,9 @@ name = "shopp"
 
 [dependencies]
 async-std = { version = "*" }
-ntex = { version = "*", features = ["async-std"] }
-sqlx = { version = "*", features = ["runtime-async-std", "tls-native-tls"] }
+ntex = { version = "*", default-features = false, features = ["async-std"] }
+sqlx = { version = "*", default-features = false, features = ["runtime-async-std", "tls-native-tls"] }
 tracing = { version = "*" }
+
+[dev-dependencies]
+curl = { version = "*" }
