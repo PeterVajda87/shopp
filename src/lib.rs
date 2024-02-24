@@ -1,5 +1,6 @@
 use ntex::server::Server;
 use ntex::web;
+use std::net::TcpListener;
 
 #[web::get("/health_check")]
 async fn health_check() -> impl web::Responder {
@@ -10,9 +11,9 @@ pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(health_check);
 }
 
-pub fn run() -> Result<Server, std::io::Error> {
+pub fn run(listener: TcpListener) -> Result<Server, std::io::Error> {
     let server = web::HttpServer::new(|| web::App::new().configure(config))
-        .bind(("127.0.0.1", 8000))?
+        .listen(listener)?
         .run();
 
     Ok(server)

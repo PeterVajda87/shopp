@@ -1,3 +1,4 @@
+use curl::easy::Easy;
 use ntex::{web, web::test};
 use shopp::config;
 
@@ -14,17 +15,21 @@ async fn health_check_works() {
 
 #[ntex::test]
 async fn spawn_server_works() {
+    let address = spawn_server();
     spawn_server();
-    let _ = std::process::Command::new("curl")
-        .arg("http://127.0.0.1:8000/health_check")
-        .arg("-vvv")
-        .spawn()
-        .expect("Failed to execute command.")
-        .wait()
-        .expect("Failed to wait");
+
+    let mut easy = Easy::new();
+    easy.url(&format!("{}/health_check", &address)).unwrap();
+    easy.perform().expect("Failed to perform cUrl request");
+
+    assert_eq!(200, easy.response_code().unwrap());
 }
 
-fn spawn_server() {
-    let server = shopp::run().expect("Failed to start server.");
+fn spawn_server() -> String {
+    let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("Failed to bind random port");
+    let port = listener.local_addr().unwrap().port();
+    let server = shopp::run(listener).expect("Failed to start server.");
     let _ = async_std::task::spawn(server);
+
+    format!("http://127.0.0.1:{port}")
 }
