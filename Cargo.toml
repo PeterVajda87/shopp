@@ -17,6 +17,8 @@ async-std = { version = "*" }
 ntex = { version = "*", default-features = false, features = ["async-std"] }
 sqlx = { version = "*", default-features = false, features = ["runtime-async-std", "tls-native-tls"] }
 tracing = { version = "*" }
+markup = { version = "*" }
+uuid = { version = "*", features = ["v4", "fast-rng", "macro-diagnostics", "serde"] }
 
 [dev-dependencies]
 curl = { version = "*" }
