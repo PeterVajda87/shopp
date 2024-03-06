@@ -19,6 +19,7 @@ tracing = { version = "*" }
 markup = { version = "*" }
 uuid = { version = "*", features = ["v4", "fast-rng", "macro-diagnostics", "serde"] }
 sqlx = { version = "*", features = ["runtime-async-std", "tls-native-tls", "postgres", "uuid", "chrono", "migrate", "macros"] }
+serde = { version = "*", features = ["derive"] }
 
 [dev-dependencies]
 curl = { version = "*" }

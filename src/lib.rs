@@ -2,20 +2,32 @@ mod routes;
 mod templates;
 use ntex::server::Server;
 use ntex::web::{self, HttpRequest};
+use serde::{Deserialize, Serialize};
 use std::net::TcpListener;
 use uuid::Uuid;
 
+type DbPool = sqlx::postgres::PgPool;
+
+#[derive(sqlx::Type, Serialize, Deserialize, Debug)]
+#[sqlx(type_name = "page_type", rename_all = "lowercase")]
 enum PageType {
     Product,
     Category,
     CMS,
     Checkout,
+    Cart,
 }
 
+#[derive(Debug)]
 struct Slug {
-    id: Uuid,
-    text: String,
+    slug: String,
     page_type: PageType,
+    item_id: Uuid,
+}
+
+struct Category {
+    id: Uuid,
+    category_name: String,
 }
 
 #[web::get("/health_check")]
@@ -24,9 +36,34 @@ async fn health_check() -> impl web::Responder {
 }
 
 #[web::get("/{slug}")]
-async fn route_by_slug(req: HttpRequest, slug: web::types::Path<String>) -> impl web::Responder {
+async fn route_by_slug(
+    req: HttpRequest,
+    slug: web::types::Path<String>,
+    pool: web::types::State<DbPool>,
+) -> impl web::Responder {
+    let slug = sqlx::query_as!(
+        Slug,
+        r#"SELECT slug, page_type as "page_type: PageType", item_id FROM slug WHERE slug = $1"#,
+        slug.as_str()
+    )
+    .fetch_one(&*pool)
+    .await
+    .expect("Database error");
+
+    match slug.page_type {
+        PageType::CMS => {}
+
+        PageType::Product => {}
+
+        PageType::Category => {}
+
+        PageType::Checkout => {}
+
+        PageType::Cart => {}
+    };
+
     println!("Request: {:?}", req);
-    format!("Hello: {}!", slug)
+    format!("Hello: {:?}!", slug)
 }
 
 pub fn config(cfg: &mut web::ServiceConfig) {
@@ -36,10 +73,11 @@ pub fn config(cfg: &mut web::ServiceConfig) {
         .service(routes::product_page::product_page);
 }
 
-pub fn run(listener: TcpListener) -> Result<Server, std::io::Error> {
-    let server = web::HttpServer::new(|| web::App::new().configure(config))
-        .listen(listener)?
-        .run();
+pub fn run(listener: TcpListener, pool: sqlx::PgPool) -> Result<Server, std::io::Error> {
+    let server =
+        web::HttpServer::new(move || web::App::new().state(pool.clone()).configure(config))
+            .listen(listener)?
+            .run();
 
     Ok(server)
 }
