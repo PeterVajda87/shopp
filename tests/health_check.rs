@@ -1,6 +1,7 @@
 use curl::easy::Easy;
 use ntex::{web, web::test};
 use shopp::config;
+use sqlx::postgres::PgPoolOptions;
 
 #[ntex::test]
 async fn health_check_works() {
@@ -15,8 +16,12 @@ async fn health_check_works() {
 
 #[ntex::test]
 async fn spawn_server_works() {
-    let address = spawn_server();
-    spawn_server();
+    let pool = PgPoolOptions::new()
+        .max_connections(5)
+        .connect("postgres://postgres:password@localhost/postgres")
+        .await
+        .expect("Failed to connect to PostgreSQL database");
+    let address = spawn_server(pool);
 
     let mut easy = Easy::new();
     easy.url(&format!("{}/health_check", &address)).unwrap();
@@ -25,10 +30,10 @@ async fn spawn_server_works() {
     assert_eq!(200, easy.response_code().unwrap());
 }
 
-fn spawn_server() -> String {
+fn spawn_server(pool: sqlx::PgPool) -> String {
     let listener = std::net::TcpListener::bind("127.0.0.1:0").expect("Failed to bind random port");
     let port = listener.local_addr().unwrap().port();
-    let server = shopp::run(listener).expect("Failed to start server.");
+    let server = shopp::run(listener, pool).expect("Failed to start server.");
     let _ = async_std::task::spawn(server);
 
     format!("http://127.0.0.1:{port}")
