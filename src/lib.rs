@@ -1,7 +1,8 @@
 mod routes;
 mod templates;
 use ntex::server::Server;
-use ntex::web::{self, HttpRequest};
+use ntex::web::{self, types, HttpRequest};
+use routes::{home_page, product_page};
 use serde::{Deserialize, Serialize};
 use std::net::TcpListener;
 use uuid::Uuid;
@@ -41,6 +42,7 @@ async fn route_by_slug(
     slug: web::types::Path<String>,
     pool: web::types::State<DbPool>,
 ) -> impl web::Responder {
+    println!("Slug: {:?}", slug);
     let slug = sqlx::query_as!(
         Slug,
         r#"SELECT slug, page_type as "page_type: PageType", item_id FROM slug WHERE slug = $1"#,
@@ -48,29 +50,21 @@ async fn route_by_slug(
     )
     .fetch_one(&*pool)
     .await
-    .expect("Database error");
+    .expect("Non existing slug, TODO");
 
     match slug.page_type {
-        PageType::CMS => {}
-
-        PageType::Product => {}
-
-        PageType::Category => {}
-
-        PageType::Checkout => {}
-
-        PageType::Cart => {}
-    };
-
-    println!("Request: {:?}", req);
-    format!("Hello: {:?}!", slug)
+        PageType::Product => {
+            return product_page::product_page(req, types::Path::from(slug.item_id), pool).await
+        }
+        _ => return product_page::product_page(req, types::Path::from(slug.item_id), pool).await,
+    }
 }
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(health_check)
-        .service(routes::home_page::home_page)
+        .service(home_page::home_page)
         .service(route_by_slug)
-        .service(routes::product_page::product_page);
+        .service(web::resource("/product/{id}").route(web::get().to(product_page::product_page)));
 }
 
 pub fn run(listener: TcpListener, pool: sqlx::PgPool) -> Result<Server, std::io::Error> {
