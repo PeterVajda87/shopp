@@ -1,12 +1,15 @@
 use shopp::run;
+use shopp::settings::Settings;
 use sqlx::postgres::PgPoolOptions;
 use std::net::TcpListener;
 
 #[ntex::main]
 async fn main() -> Result<(), std::io::Error> {
+    let settings = Settings::new().expect("Failed to parse settings.");
+
     let pool = PgPoolOptions::new()
         .max_connections(5)
-        .connect("postgres://postgres:password@localhost/postgres")
+        .connect(&settings.database.connection_string())
         .await
         .expect("Failed to connect to PostgreSQL database");
 

@@ -1,4 +1,5 @@
 mod routes;
+pub mod settings;
 mod templates;
 use ntex::server::Server;
 use ntex::web::{self, types, HttpRequest};
@@ -39,8 +40,8 @@ async fn health_check() -> impl web::Responder {
 #[web::get("/{slug}")]
 async fn route_by_slug(
     req: HttpRequest,
-    slug: web::types::Path<String>,
-    pool: web::types::State<DbPool>,
+    slug: types::Path<String>,
+    pool: types::State<DbPool>,
 ) -> impl web::Responder {
     println!("Slug: {:?}", slug);
     let slug = sqlx::query_as!(
