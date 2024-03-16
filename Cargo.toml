@@ -21,6 +21,7 @@ uuid = { version = "*", features = ["v4", "fast-rng", "macro-diagnostics", "serd
 sqlx = { version = "*", features = ["runtime-async-std", "tls-native-tls", "postgres", "uuid", "chrono", "migrate", "macros"] }
 serde = { version = "*", features = ["derive"] }
 config = { version = "*" }
+ntex-files = { version = "*" }
 
 [dev-dependencies]
 curl = { version = "*" }

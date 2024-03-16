@@ -3,6 +3,7 @@ pub mod settings;
 mod templates;
 use ntex::server::Server;
 use ntex::web::{self, types, HttpRequest};
+use ntex_files as fs;
 use routes::{home_page, product_page};
 use serde::{Deserialize, Serialize};
 use std::net::TcpListener;
@@ -63,6 +64,7 @@ async fn route_by_slug(
 
 pub fn config(cfg: &mut web::ServiceConfig) {
     cfg.service(health_check)
+        .service(fs::Files::new("/static", "."))
         .service(home_page::home_page)
         .service(route_by_slug)
         .service(web::resource("/product/{id}").route(web::get().to(product_page::product_page)));
