@@ -18,7 +18,7 @@ podman run \
 -e POSTGRES_USER=$DB_USER \
 -e POSTGRES_PASSWORD=$DB_PASSWORD \
 -e POSTGRES_DB=$DB_NAME \
--p 5432:5432 \
+-p 5432:$DB_PORT \
 -v /var/lib/data \
 -d postgres
 
