@@ -2,9 +2,20 @@ markup::define! {
     HomePage<'a>(title: &'a str) {
         @markup::doctype()
         html {
-            head {
-                title { @title }
-            }
+            @Head { title }
+            @Body { text: "Ahoj!" }
+        }
+    }
+    Head<'a>(title: &'a str) {
+        head {
+            title { @title }
+            link[rel = Some("icon"), type = Some("image/x-icon"), href = Some("/favicon")];
+            '\n'
+        }
+    }
+    Body<'a>(text: &'a str) {
+        div {
+            p { @text }
         }
     }
 }

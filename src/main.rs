@@ -1,5 +1,4 @@
-use shopp::run;
-use shopp::settings::Settings;
+use shopp::{run, settings::Settings};
 use sqlx::postgres::PgPoolOptions;
 use std::net::TcpListener;
 
