@@ -1,17 +1,22 @@
 {
   "db_name": "PostgreSQL",
-  "query": "SELECT id, title FROM product WHERE id = $1",
+  "query": "SELECT * FROM product WHERE product_id = $1",
   "describe": {
     "columns": [
       {
         "ordinal": 0,
-        "name": "id",
+        "name": "product_id",
         "type_info": "Uuid"
       },
       {
         "ordinal": 1,
         "name": "title",
         "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "category_id",
+        "type_info": "Uuid"
       }
     ],
     "parameters": {
@@ -21,8 +26,9 @@
     },
     "nullable": [
       false,
-      false
+      false,
+      true
     ]
   },
-  "hash": "081b26f2f61453f805827fc3eaf132321257255352455f6eb36ba03d1ec64c16"
+  "hash": "ebde3ad587bcb78f5e8a7b0007b253bfa7935829e04fc3df855b84197f6d01b6"
 }

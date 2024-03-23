@@ -1,4 +1,4 @@
-use crate::routes::product_page::*;
+use crate::routes::{category_page, product_page};
 use crate::DbPool;
 use ntex::web::{
     self,
@@ -25,11 +25,6 @@ struct Slug {
     item_id: Uuid,
 }
 
-struct Category {
-    id: Uuid,
-    category_name: String,
-}
-
 #[web::get("/{slug}")]
 async fn route_by_slug(
     req: HttpRequest,
@@ -47,7 +42,12 @@ async fn route_by_slug(
     .expect("Non existing slug, TODO");
 
     match slug.page_type {
-        PageType::Product => return product_page(req, Path::from(slug.item_id), pool).await,
-        _ => return product_page(req, Path::from(slug.item_id), pool).await,
+        PageType::Product => {
+            return product_page::product_page(req, Path::from(slug.item_id), pool).await
+        }
+        PageType::Category => {
+            return category_page::category_page(req, Path::from(slug.item_id), pool).await
+        }
+        _ => return product_page::product_page(req, Path::from(slug.item_id), pool).await,
     }
 }

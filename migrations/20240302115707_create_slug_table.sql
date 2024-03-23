@@ -1,5 +1,3 @@
--- Add migration script here
-
 CREATE TYPE page_type AS ENUM ('product', 'category', 'cms', 'checkout', 'cart');
 
 CREATE TABLE slug (

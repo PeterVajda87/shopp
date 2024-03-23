@@ -1,10 +1,10 @@
--- Add migration script here
 CREATE TABLE product (
-    id UUID NOT NULL DEFAULT gen_random_uuid(),
-    title TEXT NOT NULL
+    product_id UUID NOT NULL DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    category_id UUID,
+    PRIMARY KEY(product_id),
+    CONSTRAINT fk_category
+        FOREIGN KEY(category_id)
+            REFERENCES category(category_id),
+    CONSTRAINT uq_product_category UNIQUE (title, category_id)
 );
-
-WITH ins AS (
-INSERT INTO product (title) VALUES ('Makovy prd') RETURNING id
-)
-INSERT INTO slug (slug, page_type, item_id) VALUES ('Prd', 'product', (SELECT id FROM ins)); 
