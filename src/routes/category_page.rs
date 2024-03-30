@@ -8,24 +8,8 @@ use ntex::web::{
 use uuid::Uuid;
 
 pub async fn category_page(_req: HttpRequest, id: Path<Uuid>, pool: State<DbPool>) -> HttpResponse {
-    let id: Uuid = id.into_inner();
-    let category = sqlx::query_as!(
-        Category,
-        r#"SELECT * FROM category WHERE category_id = $1"#,
-        id.clone()
-    )
-    .fetch_one(pool.get_ref())
-    .await
-    .expect("Non existing category, TODO");
-
-    let category_products = sqlx::query_as!(
-        Product,
-        r#"SELECT * FROM product WHERE category_id = $1"#,
-        id.clone()
-    )
-    .fetch_all(&*pool)
-    .await
-    .expect("Empty category, TODO");
+    let category: Category = Category::get(id.into_inner(), &pool).await;
+    let category_products: Vec<Product> = category.get_products(&pool).await;
 
     HttpResponse::Ok().body(
         CategoryPage {

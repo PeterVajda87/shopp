@@ -8,14 +8,7 @@ use ntex::web::{
 use uuid::Uuid;
 
 pub async fn product_page(_req: HttpRequest, id: Path<Uuid>, pool: State<DbPool>) -> HttpResponse {
-    let product = sqlx::query_as!(
-        Product,
-        r#"SELECT * FROM product WHERE product_id = $1"#,
-        id.into_inner()
-    )
-    .fetch_one(pool.get_ref())
-    .await
-    .expect("Non existing product, TODO");
+    let product: Product = Product::get(id.into_inner(), &pool).await;
 
     HttpResponse::Ok().body(
         ProductPage {

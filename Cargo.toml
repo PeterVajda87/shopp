@@ -22,6 +22,7 @@ sqlx = { version = "*", features = ["runtime-async-std", "tls-native-tls", "post
 serde = { version = "*", features = ["derive"] }
 config = { version = "*" }
 ntex-files = { version = "*" }
+anyhow = { version = "*" }
 
 [dev-dependencies]
 curl = { version = "*" }
