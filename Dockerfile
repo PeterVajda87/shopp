@@ -1,20 +1,28 @@
 FROM rust:latest AS builder
-WORKDIR /app
 
-COPY Cargo.toml .
-RUN mkdir src && echo "fn main()" > src/main.rs
+RUN cargo new shopp
+WORKDIR /shopp
+COPY ./Cargo.toml ./Cargo.toml
+RUN touch ./src/lib.rs
 RUN cargo build --release
 
-COPY src src
-RUN touch src/main.rs
-RUN cargo build --release
-
-RUN strip target/release/shopp
-
-FROM gcr.io/distroless/static-debian12 as release
-WORKDIR /app
-COPY --from=builder /app/target/release/shopp .
-
-
+RUN rm -rf ./src
+COPY ./src ./src
+COPY ./migrations ./migrations
+COPY ./static ./static
+COPY ./.sqlx ./.sqlx
+RUN touch ./src/main.rs
+RUN touch ./src/lib.rs
 ENV SQLX_OFFLINE true
+  
+RUN cargo build --release
+
+FROM debian:bookworm as runtime
+WORKDIR /shopp
+RUN apt-get update && apt install -y openssl && rm -rf /var/lib/apt/lists/* && apt-get clean
+COPY ./settings.yaml ./settings.yaml
+COPY ./migrations ./migrations
+COPY ./static ./static
+COPY --from=builder /shopp/target/release/shopp ./shopp
+
 CMD ["./shopp"]

@@ -18,6 +18,6 @@ async fn main() -> Result<(), std::io::Error> {
         .expect("Failed to do migrations");
 
     let listener: TcpListener =
-        TcpListener::bind("127.0.0.1:8000").expect("Failed to bind to a port");
+        TcpListener::bind("0.0.0.0:8000").expect("Failed to bind to a port");
     run(listener, pool)?.await
 }

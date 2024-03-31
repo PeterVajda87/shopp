@@ -14,6 +14,7 @@ DB_HOST="${POSTGRES_HOST:=localhost}"
 # Init DB 
 podman run \
 --name postgres \
+--network host \
 --replace \
 -e POSTGRES_USER=$DB_USER \
 -e POSTGRES_PASSWORD=$DB_PASSWORD \
@@ -32,4 +33,4 @@ done
 
 DATABASE_URL="postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
 export DATABASE_URL
-# sqlx migrate run
+sqlx migrate run
