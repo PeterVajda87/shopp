@@ -9,7 +9,7 @@ markup::define! {
     Head<'a>(title: &'a str) {
         head {
             title { @title }
-            link[rel = Some("icon"), type = Some("image/x-icon"), href = Some("static/favicon.ico")];
+            link[rel = Some("icon"), type = Some("image/x-icon"), href = "static/favicon.ico"];
             '\n'
         }
     }

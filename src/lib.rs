@@ -9,7 +9,7 @@ use ntex::{
     },
 };
 use ntex_files as fs;
-use routes::{home_page::*, product_page::*, slug::*};
+use routes::{home_page::*, not_found_page::*, product_page::*, slug::*};
 use std::net::TcpListener;
 
 pub type DbPool = sqlx::postgres::PgPool;
@@ -33,9 +33,14 @@ pub fn config(cfg: &mut ServiceConfig) {
 }
 
 pub fn run(listener: TcpListener, pool: sqlx::PgPool) -> Result<Server, std::io::Error> {
-    let server = HttpServer::new(move || App::new().state(pool.clone()).configure(config))
-        .listen(listener)?
-        .run();
+    let server = HttpServer::new(move || {
+        App::new()
+            .default_service(ntex::web::to(|req| async { not_found_page(req).await }))
+            .state(pool.clone())
+            .configure(config)
+    })
+    .listen(listener)?
+    .run();
 
     Ok(server)
 }

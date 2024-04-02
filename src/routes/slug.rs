@@ -1,4 +1,4 @@
-use crate::routes::{category_page, product_page};
+use crate::routes::{category_page, not_found_page, product_page};
 use crate::DbPool;
 use ntex::web::{
     self,
@@ -32,22 +32,25 @@ async fn route_by_slug(
     pool: State<DbPool>,
 ) -> impl web::Responder {
     println!("Slug: {:?}", slug);
-    let slug = sqlx::query_as!(
+
+    if let Ok(slug) = sqlx::query_as!(
         Slug,
         r#"SELECT slug, page_type as "page_type: PageType", item_id FROM slug WHERE slug = $1"#,
         slug.as_str()
     )
     .fetch_one(&*pool)
     .await
-    .expect("Non existing slug, TODO");
-
-    match slug.page_type {
-        PageType::Product => {
-            return product_page::product_page(req, Path::from(slug.item_id), pool).await
+    {
+        match slug.page_type {
+            PageType::Product => {
+                return product_page::product_page(req, Path::from(slug.item_id), pool).await
+            }
+            PageType::Category => {
+                return category_page::category_page(req, Path::from(slug.item_id), pool).await
+            }
+            _ => return product_page::product_page(req, Path::from(slug.item_id), pool).await,
         }
-        PageType::Category => {
-            return category_page::category_page(req, Path::from(slug.item_id), pool).await
-        }
-        _ => return product_page::product_page(req, Path::from(slug.item_id), pool).await,
     }
+
+    not_found_page::not_found_page(req).await
 }

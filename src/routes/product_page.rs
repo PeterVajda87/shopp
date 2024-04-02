@@ -13,6 +13,7 @@ pub async fn product_page(_req: HttpRequest, id: Path<Uuid>, pool: State<DbPool>
     HttpResponse::Ok().body(
         ProductPage {
             title: &format!("Product {} page", product.title),
+            product,
         }
         .to_string(),
     )
