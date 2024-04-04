@@ -1,6 +1,10 @@
-application_port: 80
+application_port: 443
 database:
   host: "127.0.0.1"
   port: 5432
   username: postgres
   database_name: shopp
+ssl:
+  private_key_file: "settings/private.key"
+  certification_chain_file: "settings/certificate.crt"
+  ca_file: "settings/ca_bundle.crt"

@@ -11,7 +11,7 @@ pub struct Product {
 }
 
 impl Product {
-    pub async fn get(id: Uuid, pool: &State<DbPool>) -> Product {
+    pub async fn get(id: Uuid, pool: &State<DbPool>) -> Result<Product, sqlx::Error> {
         sqlx::query_as!(
             Product,
             r#"SELECT * FROM product WHERE product_id = $1"#,
@@ -19,7 +19,6 @@ impl Product {
         )
         .fetch_one(pool.get_ref())
         .await
-        .unwrap()
     }
 }
 

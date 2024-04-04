@@ -7,14 +7,18 @@ use ntex::web::{
 };
 use uuid::Uuid;
 
-pub async fn product_page(_req: HttpRequest, id: Path<Uuid>, pool: State<DbPool>) -> HttpResponse {
-    let product: Product = Product::get(id.into_inner(), &pool).await;
+use super::not_found_page::not_found_page;
 
-    HttpResponse::Ok().body(
-        ProductPage {
-            title: &format!("Product {} page", product.title),
-            product,
-        }
-        .to_string(),
-    )
+pub async fn product_page(req: HttpRequest, id: Path<Uuid>, pool: State<DbPool>) -> HttpResponse {
+    if let Ok(product) = Product::get(id.into_inner(), &pool).await {
+        HttpResponse::Ok().body(
+            ProductPage {
+                title: &format!("Product {} page", product.title),
+                product,
+            }
+            .to_string(),
+        )
+    } else {
+        not_found_page(req).await
+    }
 }

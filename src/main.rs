@@ -1,10 +1,13 @@
-use shopp::{run, settings::Settings};
+use openssl::ssl::{SslAcceptor, SslMethod};
+use shopp::settings::RunMode;
+use shopp::{settings::Settings, Run};
 use sqlx::postgres::PgPoolOptions;
 use std::net::TcpListener;
 
 #[ntex::main]
 async fn main() -> Result<(), std::io::Error> {
-    let settings = Settings::new().expect("Failed to parse settings.");
+    let run_mode = RunMode::get();
+    let settings = Settings::new(&run_mode).expect("Failed to parse settings.");
 
     let pool = PgPoolOptions::new()
         .max_connections(5)
@@ -17,8 +20,14 @@ async fn main() -> Result<(), std::io::Error> {
         .await
         .expect("Failed to do migrations");
 
-    let listener: TcpListener = TcpListener::bind(("0.0.0.0", settings.application_port))
-        .expect("Failed to bind to a port");
-
-    run(listener, pool)?.await
+    match run_mode {
+        RunMode::Production => {
+            let ssl_builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
+            ssl_builder.run(pool, settings)?.await
+        }
+        RunMode::Development => {
+            let tcp_listener = TcpListener::bind(("0.0.0.0", settings.application_port)).unwrap();
+            tcp_listener.run(pool, settings)?.await
+        }
+    }
 }

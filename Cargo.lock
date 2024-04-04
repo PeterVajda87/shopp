@@ -1392,6 +1392,7 @@ dependencies = [
  "ntex-tls",
  "ntex-util",
  "oneshot",
+ "openssl",
  "percent-encoding",
  "pin-project-lite",
  "polling 3.4.0",
@@ -1455,6 +1456,7 @@ dependencies = [
  "ntex-service",
  "ntex-tls",
  "ntex-util",
+ "openssl",
  "thiserror",
 ]
 
@@ -1588,6 +1590,7 @@ dependencies = [
  "ntex-io",
  "ntex-service",
  "ntex-util",
+ "openssl",
  "pin-project-lite",
 ]
 
@@ -1714,6 +1717,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
+name = "openssl-src"
+version = "300.2.3+3.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5cff92b6f71555b61bb9315f7c64da3ca43d87531622120fea0195fc761b4843"
+dependencies = [
+ "cc",
+]
+
+[[package]]
 name = "openssl-sys"
 version = "0.9.99"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1721,6 +1733,7 @@ checksum = "22e1bf214306098e4832460f797824c05d25aacdf896f64a985fb0fd992454ae"
 dependencies = [
  "cc",
  "libc",
+ "openssl-src",
  "pkg-config",
  "vcpkg",
 ]
@@ -2274,6 +2287,7 @@ dependencies = [
  "markup",
  "ntex",
  "ntex-files",
+ "openssl",
  "serde",
  "sqlx",
  "tracing",

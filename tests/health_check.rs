@@ -1,5 +1,6 @@
 use curl::easy::Easy;
 use ntex::{web, web::test};
+use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use shopp::{config, run, settings::Settings};
 use sqlx::{postgres::PgPoolOptions, Connection, Executor, PgConnection, Pool, Postgres};
 
@@ -40,7 +41,25 @@ async fn spawn_server() -> TestApp {
 
     let db_pool = configure_database(&settings).await;
 
-    let server = run(listener, db_pool.clone()).expect("Failed to start server.");
+    // Load TLS keys
+    let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
+    // Load the private key
+    builder
+        .set_private_key_file("settings/private.key", SslFiletype::PEM)
+        .unwrap();
+    // Load the certificate
+    builder
+        .set_certificate_chain_file("settings/certificate.crt")
+        .unwrap();
+    // Load the CA bundle, if available
+    builder
+        .set_ca_file("settings/ca_bundle.crt")
+        .unwrap_or_else(|_| {
+            println!("CA bundle not found or could not be loaded.");
+        });
+
+    let server =
+        run(db_pool.clone(), builder, settings.application_port).expect("Failed to start server.");
 
     sqlx::migrate!()
         .run(&db_pool)
