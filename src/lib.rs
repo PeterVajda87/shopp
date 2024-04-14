@@ -73,6 +73,14 @@ async fn health_check() -> impl Responder {
     HttpResponse::Ok()
 }
 
+#[get("/static/{directory}/{file_path}")]
+async fn catalog_file(path: Path<(String, String)>) -> Result<fs::NamedFile, Error> {
+    let (directory, file_path) = path.into_inner();
+    Ok(fs::NamedFile::open(format!(
+        "static/{directory}/{file_path}"
+    ))?)
+}
+
 #[get("/static/{file_path}")]
 async fn static_file(file_path: Path<String>) -> Result<fs::NamedFile, Error> {
     Ok(fs::NamedFile::open(format!("static/{file_path}"))?)
@@ -80,6 +88,7 @@ async fn static_file(file_path: Path<String>) -> Result<fs::NamedFile, Error> {
 
 pub fn config(cfg: &mut ServiceConfig) {
     cfg.service(health_check)
+        .service(catalog_file)
         .service(static_file)
         .service(home_page)
         .service(route_by_slug)

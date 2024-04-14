@@ -14,6 +14,10 @@ pub async fn product_page(req: HttpRequest, id: Path<Uuid>, pool: State<DbPool>)
         HttpResponse::Ok().body(
             ProductPage {
                 title: &format!("Product {} page", product.title),
+                product_image: product
+                    .get_main_image(&pool)
+                    .await
+                    .expect("Failed to fetch product image"),
                 product,
             }
             .to_string(),
