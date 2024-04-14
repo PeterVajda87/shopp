@@ -12,7 +12,6 @@ COPY ./migrations ./migrations
 COPY ./static ./static
 COPY ./settings ./settings
 COPY ./.sqlx ./.sqlx
-COPY ./.well-known ./.well-known
 RUN touch ./src/main.rs && touch ./src/lib.rs
 ENV SQLX_OFFLINE true
   
@@ -24,7 +23,6 @@ RUN apt-get update && apt install -y openssl && rm -rf /var/lib/apt/lists/* && a
 COPY ./settings ./settings
 COPY ./migrations ./migrations
 COPY ./static ./static
-COPY ./.well-known ./.well-known
 COPY --from=builder /shopp/target/release/shopp ./shopp
 
 CMD ["./shopp"]

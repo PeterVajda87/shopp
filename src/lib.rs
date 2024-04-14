@@ -78,17 +78,9 @@ async fn static_file(file_path: Path<String>) -> Result<fs::NamedFile, Error> {
     Ok(fs::NamedFile::open(format!("static/{file_path}"))?)
 }
 
-#[get("/.well-known/pki-validation/{file_name}")]
-async fn https_file(file_name: Path<String>) -> Result<fs::NamedFile, Error> {
-    Ok(fs::NamedFile::open(format!(
-        ".well-known/pki-validation/{file_name}"
-    ))?)
-}
-
 pub fn config(cfg: &mut ServiceConfig) {
     cfg.service(health_check)
         .service(static_file)
-        .service(https_file)
         .service(home_page)
         .service(route_by_slug)
         .service(resource("/product/{id}").route(get().to(product_page)));
