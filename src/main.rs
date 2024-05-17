@@ -1,33 +1,40 @@
+use entities::category;
 use openssl::ssl::{SslAcceptor, SslMethod};
-use shopp::settings::RunMode;
-use shopp::{settings::Settings, Run};
-use sqlx::postgres::PgPoolOptions;
+use shopp::settings::{Settings, RunMode};
+use shopp::Run;
+use sea_orm::*;
 use std::net::TcpListener;
+use sea_orm_migration::prelude::*;
+use migrator::Migrator;
+
+mod migrator;
+mod entities;
+
+use entities::{prelude::*, *};
 
 #[ntex::main]
 async fn main() -> Result<(), std::io::Error> {
     let run_mode = RunMode::get();
     let settings = Settings::new(&run_mode).expect("Failed to parse settings.");
 
-    let pool = PgPoolOptions::new()
-        .max_connections(5)
-        .connect(&settings.database.connection_string())
-        .await
-        .expect("Failed to connect to PostgreSQL database");
+    let connection: DatabaseConnection = Database::connect(&settings.database.connection_string()).await.expect("Failed to connect to PostgreSQL database");
+    Migrator::fresh(&connection).await.expect("Failed to do migrations.");
 
-    sqlx::migrate!()
-        .run(&pool)
-        .await
-        .expect("Failed to do migrations");
+    let category = category::ActiveModel {
+        name: ActiveValue::Set("Cars".to_owned()),
+        ..Default::default()
+    };
 
-    match run_mode {
+    let _res = Category::insert(category).exec(&connection).await.expect("Failed to insert to DB");
+
+    match run_mode {    
         RunMode::Production => {
             let ssl_builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
-            ssl_builder.run(pool, settings)?.await
+            ssl_builder.run(connection, settings)?.await
         }
         RunMode::Development => {
             let tcp_listener = TcpListener::bind(("0.0.0.0", settings.application_port)).unwrap();
-            tcp_listener.run(pool, settings)?.await
+            tcp_listener.run(connection, settings)?.await
         }
     }
 }

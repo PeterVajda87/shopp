@@ -1,21 +1,17 @@
-pub mod models;
-mod routes;
 pub mod settings;
-mod templates;
 use ntex::web::{
-    get, resource, types::Path, App, Error, HttpResponse, HttpServer, Responder, ServiceConfig,
+    get, types::Path, App, Error, HttpResponse, HttpServer, Responder, ServiceConfig,
 };
 use ntex_files as fs;
 use openssl::ssl::SslFiletype;
-use routes::{home_page::*, not_found_page::*, product_page::*, slug::*};
 use settings::Settings;
+use sea_orm::DatabaseConnection;
 
-pub type DbPool = sqlx::postgres::PgPool;
 
 pub trait Run {
     fn run(
         self,
-        pool: sqlx::PgPool,
+        connection: DatabaseConnection,
         settings: Settings,
     ) -> Result<ntex::server::Server, std::io::Error>;
 }
@@ -23,13 +19,12 @@ pub trait Run {
 impl Run for std::net::TcpListener {
     fn run(
         self,
-        pool: sqlx::PgPool,
+        connection: DatabaseConnection,
         _settings: Settings,
     ) -> Result<ntex::server::Server, std::io::Error> {
         let server = HttpServer::new(move || {
             App::new()
-                .default_service(ntex::web::to(|req| async { not_found_page(req).await }))
-                .state(pool.clone())
+                .state(connection.clone())
                 .configure(config)
         })
         .listen(self)?
@@ -42,7 +37,7 @@ impl Run for std::net::TcpListener {
 impl Run for openssl::ssl::SslAcceptorBuilder {
     fn run(
         mut self,
-        pool: sqlx::PgPool,
+        connection: DatabaseConnection,
         settings: Settings,
     ) -> Result<ntex::server::Server, std::io::Error> {
         if let Some(ssl) = settings.ssl {
@@ -54,8 +49,7 @@ impl Run for openssl::ssl::SslAcceptorBuilder {
                 .expect("CA bundle not found or could not be loaded.");
             let server = HttpServer::new(move || {
                 App::new()
-                    .default_service(ntex::web::to(|req| async { not_found_page(req).await }))
-                    .state(pool.clone())
+                    .state(connection.clone())
                     .configure(config)
             })
             .bind_openssl(("0.0.0.0", settings.application_port), self)?
@@ -89,8 +83,5 @@ async fn static_file(file_path: Path<String>) -> Result<fs::NamedFile, Error> {
 pub fn config(cfg: &mut ServiceConfig) {
     cfg.service(health_check)
         .service(catalog_file)
-        .service(static_file)
-        .service(home_page)
-        .service(route_by_slug)
-        .service(resource("/product/{id}").route(get().to(product_page)));
+        .service(static_file);
 }
