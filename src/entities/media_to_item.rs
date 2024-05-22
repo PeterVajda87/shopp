@@ -4,31 +4,31 @@ use super::sea_orm_active_enums::Itemtype;
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "slug")]
+#[sea_orm(table_name = "media_to_item")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
+    pub media_id: Uuid,
     pub item_id: Uuid,
-    pub language_id: Uuid,
-    pub text: String,
+    pub order: i16,
     pub item_type: Itemtype,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
-        belongs_to = "super::language::Entity",
-        from = "Column::LanguageId",
-        to = "super::language::Column::Id",
+        belongs_to = "super::media::Entity",
+        from = "Column::MediaId",
+        to = "super::media::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    Language,
+    Media,
 }
 
-impl Related<super::language::Entity> for Entity {
+impl Related<super::media::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Language.def()
+        Relation::Media.def()
     }
 }
 

@@ -1,12 +1,14 @@
+pub mod entities;
+pub mod routes;
 pub mod settings;
-use ntex::web::{
-    get, types::Path, App, Error, HttpResponse, HttpServer, Responder, ServiceConfig,
-};
+pub mod templates;
+
+use ntex::web::{get, resource, types::Path, App, Error, HttpResponse, HttpServer, Responder, ServiceConfig};
 use ntex_files as fs;
 use openssl::ssl::SslFiletype;
-use settings::Settings;
+use routes::{slug::route_by_slug, product::product_page};
 use sea_orm::DatabaseConnection;
-
+use settings::Settings;
 
 pub trait Run {
     fn run(
@@ -22,13 +24,10 @@ impl Run for std::net::TcpListener {
         connection: DatabaseConnection,
         _settings: Settings,
     ) -> Result<ntex::server::Server, std::io::Error> {
-        let server = HttpServer::new(move || {
-            App::new()
-                .state(connection.clone())
-                .configure(config)
-        })
-        .listen(self)?
-        .run();
+        let server =
+            HttpServer::new(move || App::new().state(connection.clone()).configure(config))
+                .listen(self)?
+                .run();
 
         Ok(server)
     }
@@ -47,13 +46,10 @@ impl Run for openssl::ssl::SslAcceptorBuilder {
                 .expect("Error loading certification chain file.");
             self.set_ca_file(ssl.ca_file)
                 .expect("CA bundle not found or could not be loaded.");
-            let server = HttpServer::new(move || {
-                App::new()
-                    .state(connection.clone())
-                    .configure(config)
-            })
-            .bind_openssl(("0.0.0.0", settings.application_port), self)?
-            .run();
+            let server =
+                HttpServer::new(move || App::new().state(connection.clone()).configure(config))
+                    .bind_openssl(("0.0.0.0", settings.application_port), self)?
+                    .run();
 
             Ok(server)
         } else {
@@ -83,5 +79,8 @@ async fn static_file(file_path: Path<String>) -> Result<fs::NamedFile, Error> {
 pub fn config(cfg: &mut ServiceConfig) {
     cfg.service(health_check)
         .service(catalog_file)
-        .service(static_file);
+        .service(route_by_slug)
+        .service(static_file)
+        .service(resource("/product/{id}").route(get().to(product_page)));
+
 }

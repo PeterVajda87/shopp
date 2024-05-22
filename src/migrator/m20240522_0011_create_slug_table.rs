@@ -1,5 +1,6 @@
 use sea_orm_migration::prelude::*;
 use super::m20240517_0004_create_itemtype_enum::ItemType;
+use super::m20240517_0005_create_language_table::Language;
 
 pub struct Migration;
 
@@ -16,13 +17,6 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(Slug::Table)
-                    .index(Index::create()
-                            .name("idx-slug-item_id")
-                            .table(Slug::Table)
-                            .col(Slug::Slug)
-                            .col(Slug::ItemId)
-                            .unique()
-                            .nulls_not_distinct())
                     .col(
                         ColumnDef::new(Slug::Id)
                             .uuid()
@@ -30,9 +24,23 @@ impl MigrationTrait for Migration {
                             .default(PgFunc::gen_random_uuid())
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(Slug::Slug).string().not_null())
                     .col(ColumnDef::new(Slug::ItemId).uuid().not_null())
-                    .col(ColumnDef::new(Slug::ItemType).not_null().enumeration(ItemType::Enum, [ItemType::Product, ItemType::Category]))
+                    .col(ColumnDef::new(Slug::LanguageId).uuid().not_null())
+                    .col(ColumnDef::new(Slug::Text).string().not_null())
+                    .col(
+                        ColumnDef::new(Slug::ItemType)
+                            .not_null()
+                            .enumeration(
+                                ItemType::Enum,
+                                [ItemType::Product, ItemType::Category, ItemType::SKU, ItemType::Page],
+                            ),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk-slug-language")
+                            .from(Slug::Table, Slug::LanguageId)
+                            .to(Language::Table, Language::Id),
+                    )
                     .to_owned(),
             )
             .await
@@ -49,7 +57,8 @@ impl MigrationTrait for Migration {
 pub enum Slug {
     Table,
     Id,
-    Slug,
+    LanguageId,
+    Text,
     ItemId,
     ItemType
 }

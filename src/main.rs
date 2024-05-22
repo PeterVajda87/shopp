@@ -1,33 +1,75 @@
-use entities::category;
-use openssl::ssl::{SslAcceptor, SslMethod};
-use shopp::settings::{Settings, RunMode};
-use shopp::Run;
-use sea_orm::*;
-use std::net::TcpListener;
-use sea_orm_migration::prelude::*;
+use entities::*;
 use migrator::Migrator;
+use openssl::ssl::{SslAcceptor, SslMethod};
+use sea_orm::*;
+use sea_orm_migration::prelude::*;
+use shopp::{
+    settings::{RunMode, Settings},
+    Run,
+};
+use std::net::TcpListener;
 
-mod migrator;
 mod entities;
+mod migrator;
 
-use entities::{prelude::*, *};
+use entities::prelude::*;
 
 #[ntex::main]
 async fn main() -> Result<(), std::io::Error> {
     let run_mode = RunMode::get();
     let settings = Settings::new(&run_mode).expect("Failed to parse settings.");
 
-    let connection: DatabaseConnection = Database::connect(&settings.database.connection_string()).await.expect("Failed to connect to PostgreSQL database");
-    Migrator::fresh(&connection).await.expect("Failed to do migrations.");
+    let connection: DatabaseConnection = Database::connect(&settings.database.connection_string())
+        .await
+        .expect("Failed to connect to PostgreSQL database");
+    Migrator::fresh(&connection)
+        .await
+        .expect("Failed to do migrations.");
 
     let category = category::ActiveModel {
-        name: ActiveValue::Set("Cars".to_owned()),
+        name: ActiveValue::Set("cars".to_owned()),
         ..Default::default()
     };
 
-    let _res = Category::insert(category).exec(&connection).await.expect("Failed to insert to DB");
+    let res_category = Category::insert(category)
+        .exec(&connection)
+        .await
+        .expect("Failed to insert to DB");
 
-    match run_mode {    
+    let product = product::ActiveModel {
+        name: ActiveValue::Set("Skoda 105".to_owned()),
+        ..Default::default()
+    };
+
+    let res_product: InsertResult<product::ActiveModel> = Product::insert(product)
+        .exec(&connection)
+        .await
+        .expect("Failed to insert to DB");
+
+    let p2c = product_to_category::ActiveModel {
+        product_id: ActiveValue::Set(res_product.last_insert_id),
+        category_id: ActiveValue::Set(res_category.last_insert_id),
+        ..Default::default()
+    };
+
+    let _res_p2c = ProductToCategory::insert(p2c)
+        .exec(&connection)
+        .await
+        .expect("Failed to insert to DB");
+
+    let slug = slug::ActiveModel {
+        text: ActiveValue::Set("auta".to_owned()),
+        item_id: ActiveValue::Set(res_product.last_insert_id),
+        item_type: ActiveValue::Set(ItemType::Product),
+        ..Default::default()
+    };
+
+    let _res_slug = Slug::insert(slug)
+        .exec(&connection)
+        .await
+        .expect("Failed to insert to DB.");
+
+    match run_mode {
         RunMode::Production => {
             let ssl_builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
             ssl_builder.run(connection, settings)?.await

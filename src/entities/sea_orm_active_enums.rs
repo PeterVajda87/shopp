@@ -7,6 +7,22 @@ use sea_orm::entity::prelude::*;
 pub enum Itemtype {
     #[sea_orm(string_value = "Category")]
     Category,
+    #[sea_orm(string_value = "Page")]
+    Page,
     #[sea_orm(string_value = "Product")]
     Product,
+    #[sea_orm(string_value = "SKU")]
+    Sku,
+}
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "mediatype")]
+pub enum Mediatype {
+    #[sea_orm(string_value = "Audio")]
+    Audio,
+    #[sea_orm(string_value = "File")]
+    File,
+    #[sea_orm(string_value = "Image")]
+    Image,
+    #[sea_orm(string_value = "Video")]
+    Video,
 }

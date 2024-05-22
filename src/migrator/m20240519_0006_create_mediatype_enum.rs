@@ -4,7 +4,7 @@ pub struct Migration;
 
 impl MigrationName for Migration {
     fn name(&self) -> &str {
-        "m20240517_0004_create_itemtype_enum"
+        "m20240519_0006_create_mediatype_enum"
     }
 }
 
@@ -14,12 +14,12 @@ impl MigrationTrait for Migration {
         manager
             .create_type(
                 Type::create()
-                    .as_enum(ItemType::Enum)
+                    .as_enum(MediaType::Enum)
                     .values([
-                        ItemType::Category,
-                        ItemType::Product,
-                        ItemType::SKU,
-                        ItemType::Page,
+                        MediaType::Image,
+                        MediaType::Video,
+                        MediaType::Audio,
+                        MediaType::File,
                     ])
                     .to_owned(),
             )
@@ -28,21 +28,21 @@ impl MigrationTrait for Migration {
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
         manager
-            .drop_type(Type::drop().name(ItemType::Enum).to_owned())
+            .drop_type(Type::drop().name(MediaType::Enum).to_owned())
             .await
     }
 }
 
 #[derive(DeriveIden)]
-pub enum ItemType {
-    #[sea_orm(iden = "itemtype")]
+pub enum MediaType {
+    #[sea_orm(iden = "mediatype")]
     Enum,
-    #[sea_orm(iden = "Product")]
-    Product,
-    #[sea_orm(iden = "Category")]
-    Category,
-    #[sea_orm(iden = "SKU")]
-    SKU,
-    #[sea_orm(iden = "Page")]
-    Page,
+    #[sea_orm(iden = "Image")]
+    Image,
+    #[sea_orm(iden = "Video")]
+    Video,
+    #[sea_orm(iden = "Audio")]
+    Audio,
+    #[sea_orm(iden = "File")]
+    File,
 }

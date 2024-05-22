@@ -15,13 +15,15 @@ impl MigrationTrait for Migration {
             .create_table(
                 Table::create()
                     .table(Category::Table)
-                    .index(Index::create()
+                    .index(
+                        Index::create()
                             .name("idx-category-parent")
                             .table(Category::Table)
                             .col(Category::Name)
                             .col(Category::ParentCategoryId)
                             .unique()
-                            .nulls_not_distinct())
+                            .nulls_not_distinct(),
+                    )
                     .col(
                         ColumnDef::new(Category::Id)
                             .uuid()
@@ -31,10 +33,12 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(Category::Name).string().not_null())
                     .col(ColumnDef::new(Category::ParentCategoryId).uuid().null())
-                    .foreign_key(ForeignKey::create()
-                                    .name("fk-category-parent_category")
-                                    .from(Category::Table, Category::ParentCategoryId)
-                                    .to(Category::Table, Category::Id))
+                    .foreign_key(
+                        ForeignKey::create()
+                            .name("fk-category-parent_category")
+                            .from(Category::Table, Category::ParentCategoryId)
+                            .to(Category::Table, Category::Id),
+                    )
                     .to_owned(),
             )
             .await
@@ -52,5 +56,5 @@ pub enum Category {
     Table,
     Id,
     Name,
-    ParentCategoryId
+    ParentCategoryId,
 }
