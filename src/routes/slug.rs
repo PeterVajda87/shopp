@@ -23,7 +23,7 @@ async fn route_by_slug(
         match slug.item_type {
             ItemType::Product => product_page(_req, Path::from(slug.item_id), conn).await,
             ItemType::Category => HttpResponse::Ok().finish(),
-            _ => HttpResponse::Ok().finish()
+            _ => HttpResponse::Ok().finish(),
         }
     } else {
         HttpResponse::Ok().finish()

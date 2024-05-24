@@ -57,14 +57,71 @@ async fn main() -> Result<(), std::io::Error> {
         .await
         .expect("Failed to insert to DB");
 
+    let lang = language::ActiveModel {
+        language_code: ActiveValue::Set("CZ".to_string()),
+        name: ActiveValue::Set("Čeština".to_string()),
+        ..Default::default()
+    };
+
+    let res_lang = Language::insert(lang)
+        .exec(&connection)
+        .await
+        .expect("Failed to insert to DB");
+
     let slug = slug::ActiveModel {
         text: ActiveValue::Set("auta".to_owned()),
         item_id: ActiveValue::Set(res_product.last_insert_id),
         item_type: ActiveValue::Set(ItemType::Product),
+        language_id: ActiveValue::Set(res_lang.last_insert_id),
         ..Default::default()
     };
 
     let _res_slug = Slug::insert(slug)
+        .exec(&connection)
+        .await
+        .expect("Failed to insert to DB.");
+
+    let image = media::ActiveModel {
+        media_type: ActiveValue::Set(MediaType::Image),
+        path: ActiveValue::Set("/static/product/prd.webp".to_string()),
+        ..Default::default()
+    };
+
+    let res_image = Media::insert(image)
+        .exec(&connection)
+        .await
+        .expect("Failed to insert to DB.");
+
+    let image_to_product = media_to_item::ActiveModel {
+        media_id: ActiveValue::Set(res_image.last_insert_id),
+        item_id: ActiveValue::Set(res_product.last_insert_id),
+        item_type: ActiveValue::Set(ItemType::Product),
+        order: ActiveValue::set(0),
+        ..Default::default()
+    };
+
+    let _res_i2p = MediaToItem::insert(image_to_product)
+        .exec(&connection)
+        .await
+        .expect("Failed to insert to DB.");
+
+    let sku = sku::ActiveModel {
+        name: ActiveValue::Set("modra skoda 105".to_string()),
+        ..Default::default()
+    };
+
+    let res_sku = Sku::insert(sku)
+        .exec(&connection)
+        .await
+        .expect("Failed to insert to DB.");
+
+    let s2p = sku_to_product::ActiveModel {
+        product_id: ActiveValue::Set(res_product.last_insert_id),
+        sku_id: ActiveValue::Set(res_sku.last_insert_id),
+        ..Default::default()
+    };
+
+    let _res_s2p = SkuToProduct::insert(s2p)
         .exec(&connection)
         .await
         .expect("Failed to insert to DB.");

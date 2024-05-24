@@ -35,13 +35,22 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(MediaToItem::MediaId).uuid().not_null())
                     .col(ColumnDef::new(MediaToItem::ItemId).uuid().not_null())
-                    .col(ColumnDef::new(MediaToItem::Order).small_unsigned().not_null())
+                    .col(
+                        ColumnDef::new(MediaToItem::Order)
+                            .small_unsigned()
+                            .not_null(),
+                    )
                     .col(
                         ColumnDef::new(MediaToItem::ItemType)
                             .not_null()
                             .enumeration(
                                 ItemType::Enum,
-                                [ItemType::Product, ItemType::Category, ItemType::SKU, ItemType::Page],
+                                [
+                                    ItemType::Product,
+                                    ItemType::Category,
+                                    ItemType::SKU,
+                                    ItemType::Page,
+                                ],
                             ),
                     )
                     .foreign_key(

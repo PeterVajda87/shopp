@@ -1,6 +1,6 @@
-use sea_orm_migration::prelude::*;
 use super::m20240517_0004_create_itemtype_enum::ItemType;
 use super::m20240517_0005_create_language_table::Language;
+use sea_orm_migration::prelude::*;
 
 pub struct Migration;
 
@@ -27,14 +27,15 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Slug::ItemId).uuid().not_null())
                     .col(ColumnDef::new(Slug::LanguageId).uuid().not_null())
                     .col(ColumnDef::new(Slug::Text).string().not_null())
-                    .col(
-                        ColumnDef::new(Slug::ItemType)
-                            .not_null()
-                            .enumeration(
-                                ItemType::Enum,
-                                [ItemType::Product, ItemType::Category, ItemType::SKU, ItemType::Page],
-                            ),
-                    )
+                    .col(ColumnDef::new(Slug::ItemType).not_null().enumeration(
+                        ItemType::Enum,
+                        [
+                            ItemType::Product,
+                            ItemType::Category,
+                            ItemType::SKU,
+                            ItemType::Page,
+                        ],
+                    ))
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk-slug-language")
@@ -60,5 +61,5 @@ pub enum Slug {
     LanguageId,
     Text,
     ItemId,
-    ItemType
+    ItemType,
 }

@@ -3,10 +3,12 @@ pub mod routes;
 pub mod settings;
 pub mod templates;
 
-use ntex::web::{get, resource, types::Path, App, Error, HttpResponse, HttpServer, Responder, ServiceConfig};
+use ntex::web::{
+    get, resource, types::Path, App, Error, HttpResponse, HttpServer, Responder, ServiceConfig,
+};
 use ntex_files as fs;
 use openssl::ssl::SslFiletype;
-use routes::{slug::route_by_slug, product::product_page};
+use routes::{product::product_page, slug::route_by_slug};
 use sea_orm::DatabaseConnection;
 use settings::Settings;
 
@@ -82,5 +84,4 @@ pub fn config(cfg: &mut ServiceConfig) {
         .service(route_by_slug)
         .service(static_file)
         .service(resource("/product/{id}").route(get().to(product_page)));
-
 }

@@ -22,8 +22,18 @@ impl MigrationTrait for Migration {
                             .default(PgFunc::gen_random_uuid())
                             .primary_key(),
                     )
-                    .col(ColumnDef::new(Language::LanguageCode).string_len(2).unique_key().not_null())
-                    .col(ColumnDef::new(Language::Name).string().unique_key().not_null())
+                    .col(
+                        ColumnDef::new(Language::LanguageCode)
+                            .string_len(2)
+                            .unique_key()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(Language::Name)
+                            .string()
+                            .unique_key()
+                            .not_null(),
+                    )
                     .to_owned(),
             )
             .await
@@ -41,5 +51,5 @@ pub enum Language {
     Table,
     Id,
     LanguageCode,
-    Name
+    Name,
 }

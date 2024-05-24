@@ -1,4 +1,5 @@
 use crate::entities::product::Model;
+use crate::routes::product::*;
 
 markup::define! {
     ProductPage<'a>(title: &'a str, product: Model) {

@@ -1,5 +1,5 @@
-use super::m20240522_0009_create_sku_table::SKU;
 use super::m20240517_0002_create_product_table::Product;
+use super::m20240522_0009_create_sku_table::SKU;
 use sea_orm_migration::prelude::*;
 
 pub struct Migration;
@@ -32,16 +32,8 @@ impl MigrationTrait for Migration {
                             .default(PgFunc::gen_random_uuid())
                             .primary_key(),
                     )
-                    .col(
-                        ColumnDef::new(SKUToProduct::ProductId)
-                            .uuid()
-                            .not_null(),
-                    )
-                    .col(
-                        ColumnDef::new(SKUToProduct::SKUId)
-                            .uuid()
-                            .not_null(),
-                    )
+                    .col(ColumnDef::new(SKUToProduct::ProductId).uuid().not_null())
+                    .col(ColumnDef::new(SKUToProduct::SKUId).uuid().not_null())
                     .foreign_key(
                         ForeignKey::create()
                             .name("fk-product")
