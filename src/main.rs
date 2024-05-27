@@ -1,8 +1,6 @@
 use entities::*;
-use migrator::Migrator;
 use openssl::ssl::{SslAcceptor, SslMethod};
 use sea_orm::*;
-use sea_orm_migration::prelude::*;
 use shopp::{
     settings::{RunMode, Settings},
     Run,
@@ -22,9 +20,6 @@ async fn main() -> Result<(), std::io::Error> {
     let connection: DatabaseConnection = Database::connect(&settings.database.connection_string())
         .await
         .expect("Failed to connect to PostgreSQL database");
-    Migrator::fresh(&connection)
-        .await
-        .expect("Failed to do migrations.");
 
     let category = category::ActiveModel {
         name: ActiveValue::Set("cars".to_owned()),
