@@ -23,6 +23,7 @@ impl MigrationTrait for Migration {
                             .default(PgFunc::gen_random_uuid()),
                     )
                     .col(ColumnDef::new(SKU::Name).string().not_null())
+                    .col(ColumnDef::new(SKU::EAN).string().unique_key())
                     .to_owned(),
             )
             .await
@@ -40,4 +41,5 @@ pub enum SKU {
     Table,
     Id,
     Name,
+    EAN
 }

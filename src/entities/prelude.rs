@@ -6,8 +6,6 @@ pub use super::media::Entity as Media;
 pub use super::media_to_item::Entity as MediaToItem;
 pub use super::product::Entity as Product;
 pub use super::product_to_category::Entity as ProductToCategory;
-pub use super::sea_orm_active_enums::Itemtype as ItemType;
-pub use super::sea_orm_active_enums::Mediatype as MediaType;
 pub use super::sku::Entity as Sku;
 pub use super::sku_to_product::Entity as SkuToProduct;
 pub use super::slug::Entity as Slug;
