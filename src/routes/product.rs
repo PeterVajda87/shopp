@@ -33,7 +33,7 @@ pub async fn product_page(
     } else {
         let product = product_opt.unwrap();
         let product_skus = SkuToProduct::find()
-            .filter(sku_to_product::Column::ProductId.eq(product.id))
+            .filter(sku_to_product::Column::ProductId.eq(product.id.clone()))
             .find_with_related(Sku)
             .all(&*conn)
             .await
@@ -51,13 +51,13 @@ pub async fn product_page(
         }
 
         let product_with_data = ProductWithData {
-            product,
+            product: product.clone(),
             skus: skus_with_data,
             media: None
-        }
+        };
 
         let product_media = MediaToItem::find()
-            .filter(media_to_item::Column::ItemId.eq(product.id))
+            .filter(media_to_item::Column::ItemId.eq(product.id.clone()))
             .find_with_related(Media)
             .all(&*conn)
             .await

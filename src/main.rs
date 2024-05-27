@@ -8,8 +8,6 @@ use shopp::{
 use std::net::TcpListener;
 
 mod entities;
-mod migrator;
-
 use entities::prelude::*;
 
 #[ntex::main]

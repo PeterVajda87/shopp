@@ -9,3 +9,5 @@ pub use super::product_to_category::Entity as ProductToCategory;
 pub use super::sku::Entity as Sku;
 pub use super::sku_to_product::Entity as SkuToProduct;
 pub use super::slug::Entity as Slug;
+pub use super::sea_orm_active_enums::Itemtype as ItemType;
+pub use super::sea_orm_active_enums::Mediatype as MediaType;
