@@ -89,6 +89,7 @@ async fn main() -> Result<(), std::io::Error> {
 
     let sku = sku::ActiveModel {
         name: ActiveValue::Set("modra skoda 105".to_string()),
+        product_id: ActiveValue::Set(res_product.last_insert_id),
         ..Default::default()
     };
 
