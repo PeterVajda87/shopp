@@ -8,7 +8,7 @@ use uuid::Uuid;
 
 pub struct ProductWithData {
     pub product: product::Model,
-    pub gallery: Vec<media_item::Model>,   
+    pub gallery: Vec<media_item::Model>,
 }
 
 pub async fn product_page(
@@ -16,7 +16,7 @@ pub async fn product_page(
     id: Path<Uuid>,
     conn: State<DatabaseConnection>,
 ) -> HttpResponse {
-    let product_opt: Option = Product::find()
+    let product_opt: Option<product::Model> = Product::find()
         .filter(product::Column::Id.eq(*id))
         .one(&*conn)
         .await
@@ -32,9 +32,8 @@ pub async fn product_page(
             .await
             .unwrap()
             .into_iter()
-            .flat_map(|(_, skus)| skus.into_iter())
+            .flat_map(|(_, opt_sku)| opt_sku)
             .collect::<Vec<sku::Model>>();
-
 
         let product_with_data = ProductWithData {
             product: product.clone(),

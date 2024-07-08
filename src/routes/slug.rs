@@ -21,7 +21,9 @@ async fn route_by_slug(
 
     if let Some(slug) = slug_opt {
         match slug.entity_type {
-            entities::sea_orm_active_enums::EntityType::Product => product_page(_req, Path::from(slug.entity_id), conn).await,
+            entities::sea_orm_active_enums::EntityType::Product => {
+                product_page(_req, Path::from(slug.entity_id), conn).await
+            }
             entities::sea_orm_active_enums::EntityType::Category => HttpResponse::Ok().finish(),
             _ => HttpResponse::Ok().finish(),
         }
