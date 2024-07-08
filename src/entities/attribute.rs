@@ -3,30 +3,21 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "language")]
+#[sea_orm(table_name = "attribute")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub code: String,
     pub name: String,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::description::Entity")]
-    Description,
-    #[sea_orm(has_many = "super::slug::Entity")]
-    Slug,
+    #[sea_orm(has_many = "super::variant::Entity")]
+    Variant,
 }
 
-impl Related<super::description::Entity> for Entity {
+impl Related<super::variant::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Description.def()
-    }
-}
-
-impl Related<super::slug::Entity> for Entity {
-    fn to() -> RelationDef {
-        Relation::Slug.def()
+        Relation::Variant.def()
     }
 }
 

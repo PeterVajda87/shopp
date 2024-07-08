@@ -2,11 +2,15 @@
 
 pub mod prelude;
 
+pub mod attribute;
+pub mod attribute_value;
 pub mod category;
-pub mod gallery;
+pub mod description;
 pub mod language;
-pub mod media;
+pub mod media_item;
+pub mod media_set;
 pub mod product;
 pub mod sea_orm_active_enums;
 pub mod sku;
 pub mod slug;
+pub mod variant;

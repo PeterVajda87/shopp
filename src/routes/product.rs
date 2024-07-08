@@ -1,4 +1,4 @@
-use crate::entities::{media, prelude::*, product, sku};
+use crate::entities::{media_item, prelude::*, product, sku};
 use ntex::web::{
     types::{Path, State},
     HttpRequest, HttpResponse,
@@ -6,13 +6,9 @@ use ntex::web::{
 use sea_orm::*;
 use uuid::Uuid;
 
-pub struct SkuWithData {
-    pub sku: sku::Model,
-}
-
 pub struct ProductWithData {
-    pub skus: Vec<SkuWithData>,
     pub product: product::Model,
+    pub gallery: Vec<media_item::Model>,   
 }
 
 pub async fn product_page(
@@ -20,7 +16,7 @@ pub async fn product_page(
     id: Path<Uuid>,
     conn: State<DatabaseConnection>,
 ) -> HttpResponse {
-    let product_opt: Option<product::Model> = Product::find()
+    let product_opt: Option = Product::find()
         .filter(product::Column::Id.eq(*id))
         .one(&*conn)
         .await
@@ -39,14 +35,9 @@ pub async fn product_page(
             .flat_map(|(_, skus)| skus.into_iter())
             .collect::<Vec<sku::Model>>();
 
-        let mut skus_with_data = Vec::new();
-        for sku in product_skus {
-            skus_with_data.push(SkuWithData { sku })
-        }
 
         let product_with_data = ProductWithData {
             product: product.clone(),
-            skus: vec![],
         };
 
         HttpResponse::Ok().body(

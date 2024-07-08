@@ -19,23 +19,27 @@ podman run \
 -e POSTGRES_USER=$DB_USER \
 -e POSTGRES_PASSWORD=$DB_PASSWORD \
 -e POSTGRES_DB=$DB_NAME \
--p 5432:$DB_PORT \
+-e DB_NAME=$DB_NAME \
+-e DB_HOST=$DB_HOST \
+-e DB_USER=$DB_USER \
+-e DB_PORT=$DB_PORT \
 -v /var/lib/data \
 -d postgres
 
 >&2 echo "Copying db_schema_init file from /home/peter/shopp/scripts"
-podman cp /home/peter/shopp/scripts/db_schema_init.sql postgres:/etc/
+podman cp /home/peter/shopp/scripts/migrations/ postgres:/etc/
 
 # Keep pinging Postgres until it's ready to accept commands
-export PGPASSWORD="${DB_PASSWORD}"
-until podman exec -it postgres psql -h "${DB_HOST}" -U "${DB_USER}" -p "${DB_PORT}" -d "shopp" -c '\q'; do
+until podman exec -it postgres psql -h "${DB_HOST}" -U "${DB_USER}" -p "${DB_PORT}" -d "${DB_NAME}" -c '\q'; do
 >&2 echo "Postgres is still unavailable - sleeping"
 sleep 1
 done
 >&2 echo "Postgres is up and running on port ${DB_PORT}!"
 
->&2 echo "Initializing  DB schema from file"
-podman exec -it postgres psql -h "${DB_HOST}" -U "${DB_USER}" -p "${DB_PORT}" -d "shopp" -a -f /etc/db_schema_init.sql
+>&2 echo "Running migrations"
+podman exec -it postgres bash -c 'for f in /etc/migrations/*.sql; do psql -h "${DB_HOST}" -U "${DB_USER}" -p "${DB_PORT}" -d "shopp" -a -f "$f"; done'
 
 DATABASE_URL="postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
 export DATABASE_URL
+
+sea-orm-cli generate entity -u ${DATABASE_URL} -o src/entities

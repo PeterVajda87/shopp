@@ -9,7 +9,7 @@ pub struct Model {
     pub id: Uuid,
     pub category_id: Uuid,
     pub name: String,
-    pub gallery_id: Option<Uuid>,
+    pub media_set_id: Option<Uuid>,
     pub created_at: Option<DateTime>,
 }
 
@@ -24,13 +24,13 @@ pub enum Relation {
     )]
     Category,
     #[sea_orm(
-        belongs_to = "super::gallery::Entity",
-        from = "Column::GalleryId",
-        to = "super::gallery::Column::Id",
+        belongs_to = "super::media_set::Entity",
+        from = "Column::MediaSetId",
+        to = "super::media_set::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    Gallery,
+    MediaSet,
     #[sea_orm(has_many = "super::sku::Entity")]
     Sku,
 }
@@ -41,9 +41,9 @@ impl Related<super::category::Entity> for Entity {
     }
 }
 
-impl Related<super::gallery::Entity> for Entity {
+impl Related<super::media_set::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Gallery.def()
+        Relation::MediaSet.def()
     }
 }
 

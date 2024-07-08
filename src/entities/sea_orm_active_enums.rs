@@ -13,6 +13,18 @@ pub enum EntityType {
     Sku,
 }
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "media_role")]
+pub enum MediaRole {
+    #[sea_orm(string_value = "description")]
+    Description,
+    #[sea_orm(string_value = "downloadable")]
+    Downloadable,
+    #[sea_orm(string_value = "gallery")]
+    Gallery,
+    #[sea_orm(string_value = "instructions")]
+    Instructions,
+}
+#[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
 #[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "media_type")]
 pub enum MediaType {
     #[sea_orm(string_value = "audio")]

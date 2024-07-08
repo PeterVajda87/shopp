@@ -5,7 +5,7 @@ use super::sea_orm_active_enums::MediaType;
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "media")]
+#[sea_orm(table_name = "media_item")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
@@ -13,24 +13,24 @@ pub struct Model {
     pub path: String,
     pub r#type: MediaType,
     pub role: MediaRole,
-    pub gallery_id: Option<Uuid>,
+    pub media_set_id: Option<Uuid>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
     #[sea_orm(
-        belongs_to = "super::gallery::Entity",
-        from = "Column::GalleryId",
-        to = "super::gallery::Column::Id",
+        belongs_to = "super::media_set::Entity",
+        from = "Column::MediaSetId",
+        to = "super::media_set::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    Gallery,
+    MediaSet,
 }
 
-impl Related<super::gallery::Entity> for Entity {
+impl Related<super::media_set::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Gallery.def()
+        Relation::MediaSet.def()
     }
 }
 

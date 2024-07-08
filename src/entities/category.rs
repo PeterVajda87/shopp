@@ -9,7 +9,7 @@ pub struct Model {
     pub id: Uuid,
     #[sea_orm(unique)]
     pub name: String,
-    pub gallery_id: Option<Uuid>,
+    pub media_set_id: Option<Uuid>,
     pub parent_category_id: Option<Uuid>,
     pub created_at: Option<DateTime>,
 }
@@ -25,20 +25,20 @@ pub enum Relation {
     )]
     SelfRef,
     #[sea_orm(
-        belongs_to = "super::gallery::Entity",
-        from = "Column::GalleryId",
-        to = "super::gallery::Column::Id",
+        belongs_to = "super::media_set::Entity",
+        from = "Column::MediaSetId",
+        to = "super::media_set::Column::Id",
         on_update = "NoAction",
         on_delete = "NoAction"
     )]
-    Gallery,
+    MediaSet,
     #[sea_orm(has_many = "super::product::Entity")]
     Product,
 }
 
-impl Related<super::gallery::Entity> for Entity {
+impl Related<super::media_set::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Gallery.def()
+        Relation::MediaSet.def()
     }
 }
 

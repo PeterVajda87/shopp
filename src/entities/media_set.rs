@@ -3,7 +3,7 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "gallery")]
+#[sea_orm(table_name = "media_set")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
@@ -14,8 +14,8 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(has_many = "super::category::Entity")]
     Category,
-    #[sea_orm(has_many = "super::media::Entity")]
-    Media,
+    #[sea_orm(has_many = "super::media_item::Entity")]
+    MediaItem,
     #[sea_orm(has_many = "super::product::Entity")]
     Product,
     #[sea_orm(has_many = "super::sku::Entity")]
@@ -28,9 +28,9 @@ impl Related<super::category::Entity> for Entity {
     }
 }
 
-impl Related<super::media::Entity> for Entity {
+impl Related<super::media_item::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::Media.def()
+        Relation::MediaItem.def()
     }
 }
 
