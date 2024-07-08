@@ -3,32 +3,35 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq)]
-#[sea_orm(table_name = "sku_to_product")]
+#[sea_orm(table_name = "gallery")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
-    pub product_id: Uuid,
-    pub sku_id: Uuid,
+    pub created_at: Option<DateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(
-        belongs_to = "super::product::Entity",
-        from = "Column::ProductId",
-        to = "super::product::Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
+    #[sea_orm(has_many = "super::category::Entity")]
+    Category,
+    #[sea_orm(has_many = "super::media::Entity")]
+    Media,
+    #[sea_orm(has_many = "super::product::Entity")]
     Product,
-    #[sea_orm(
-        belongs_to = "super::sku::Entity",
-        from = "Column::SkuId",
-        to = "super::sku::Column::Id",
-        on_update = "NoAction",
-        on_delete = "NoAction"
-    )]
+    #[sea_orm(has_many = "super::sku::Entity")]
     Sku,
+}
+
+impl Related<super::category::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Category.def()
+    }
+}
+
+impl Related<super::media::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Media.def()
+    }
 }
 
 impl Related<super::product::Entity> for Entity {

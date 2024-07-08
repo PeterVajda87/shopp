@@ -1,4 +1,4 @@
-use crate::entities::{media, media_to_item, prelude::*, product, sku, sku_to_product};
+use crate::entities::{media, prelude::*, product, sku};
 use ntex::web::{
     types::{Path, State},
     HttpRequest, HttpResponse,
@@ -8,13 +8,11 @@ use uuid::Uuid;
 
 pub struct SkuWithData {
     pub sku: sku::Model,
-    pub media: Option<Vec<media::Model>>
 }
 
 pub struct ProductWithData {
     pub skus: Vec<SkuWithData>,
     pub product: product::Model,
-    pub media: Option<Vec<media::Model>>
 }
 
 pub async fn product_page(
@@ -32,9 +30,8 @@ pub async fn product_page(
         HttpResponse::from("produkt som nenasiel".to_string())
     } else {
         let product = product_opt.unwrap();
-        let product_skus = SkuToProduct::find()
-            .filter(sku_to_product::Column::ProductId.eq(product.id.clone()))
-            .find_with_related(Sku)
+        let product_skus = Product::find()
+            .find_also_related(Sku)
             .all(&*conn)
             .await
             .unwrap()
@@ -44,28 +41,18 @@ pub async fn product_page(
 
         let mut skus_with_data = Vec::new();
         for sku in product_skus {
-            skus_with_data.push(SkuWithData {
-                sku,
-                media: None,
-            })
+            skus_with_data.push(SkuWithData { sku })
         }
 
         let product_with_data = ProductWithData {
             product: product.clone(),
-            skus: skus_with_data,
-            media: None
+            skus: vec![],
         };
 
-        let product_media = MediaToItem::find()
-            .filter(media_to_item::Column::ItemId.eq(product.id.clone()))
-            .find_with_related(Media)
-            .all(&*conn)
-            .await
-            .unwrap();
         HttpResponse::Ok().body(
             crate::templates::product::ProductPage {
                 title: &format!("Product {} page", product.name),
-                product,
+                product_data: product_with_data,
             }
             .to_string(),
         )

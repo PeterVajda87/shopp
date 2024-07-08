@@ -3,26 +3,24 @@
 use sea_orm::entity::prelude::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
-#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "itemtype")]
-pub enum Itemtype {
-    #[sea_orm(string_value = "Category")]
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "entity_type")]
+pub enum EntityType {
+    #[sea_orm(string_value = "category")]
     Category,
-    #[sea_orm(string_value = "Page")]
-    Page,
-    #[sea_orm(string_value = "Product")]
+    #[sea_orm(string_value = "product")]
     Product,
-    #[sea_orm(string_value = "SKU")]
+    #[sea_orm(string_value = "sku")]
     Sku,
 }
 #[derive(Debug, Clone, PartialEq, Eq, EnumIter, DeriveActiveEnum)]
-#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "mediatype")]
-pub enum Mediatype {
-    #[sea_orm(string_value = "Audio")]
+#[sea_orm(rs_type = "String", db_type = "Enum", enum_name = "media_type")]
+pub enum MediaType {
+    #[sea_orm(string_value = "audio")]
     Audio,
-    #[sea_orm(string_value = "File")]
-    File,
-    #[sea_orm(string_value = "Image")]
+    #[sea_orm(string_value = "document")]
+    Document,
+    #[sea_orm(string_value = "image")]
     Image,
-    #[sea_orm(string_value = "Video")]
+    #[sea_orm(string_value = "video")]
     Video,
 }

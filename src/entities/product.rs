@@ -7,26 +7,49 @@ use sea_orm::entity::prelude::*;
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
     pub id: Uuid,
+    pub category_id: Uuid,
     pub name: String,
+    pub gallery_id: Option<Uuid>,
+    pub created_at: Option<DateTime>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
-    #[sea_orm(has_many = "super::product_to_category::Entity")]
-    ProductToCategory,
-    #[sea_orm(has_many = "super::sku_to_product::Entity")]
-    SkuToProduct,
+    #[sea_orm(
+        belongs_to = "super::category::Entity",
+        from = "Column::CategoryId",
+        to = "super::category::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Category,
+    #[sea_orm(
+        belongs_to = "super::gallery::Entity",
+        from = "Column::GalleryId",
+        to = "super::gallery::Column::Id",
+        on_update = "NoAction",
+        on_delete = "NoAction"
+    )]
+    Gallery,
+    #[sea_orm(has_many = "super::sku::Entity")]
+    Sku,
 }
 
-impl Related<super::product_to_category::Entity> for Entity {
+impl Related<super::category::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::ProductToCategory.def()
+        Relation::Category.def()
     }
 }
 
-impl Related<super::sku_to_product::Entity> for Entity {
+impl Related<super::gallery::Entity> for Entity {
     fn to() -> RelationDef {
-        Relation::SkuToProduct.def()
+        Relation::Gallery.def()
+    }
+}
+
+impl Related<super::sku::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::Sku.def()
     }
 }
 

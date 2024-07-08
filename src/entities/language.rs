@@ -6,10 +6,7 @@ use sea_orm::entity::prelude::*;
 #[sea_orm(table_name = "language")]
 pub struct Model {
     #[sea_orm(primary_key, auto_increment = false)]
-    pub id: Uuid,
-    #[sea_orm(unique)]
-    pub language_code: String,
-    #[sea_orm(unique)]
+    pub code: String,
     pub name: String,
 }
 

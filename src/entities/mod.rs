@@ -3,12 +3,10 @@
 pub mod prelude;
 
 pub mod category;
+pub mod gallery;
 pub mod language;
 pub mod media;
-pub mod media_to_item;
 pub mod product;
-pub mod product_to_category;
 pub mod sea_orm_active_enums;
 pub mod sku;
-pub mod sku_to_product;
 pub mod slug;

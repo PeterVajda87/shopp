@@ -1,4 +1,4 @@
-use crate::entities::{prelude::*, slug};
+use crate::entities::{self, prelude::*, slug};
 use crate::routes::product::product_page;
 use ntex::web::{
     self,
@@ -20,9 +20,9 @@ async fn route_by_slug(
         .expect("Failed to execute search query");
 
     if let Some(slug) = slug_opt {
-        match slug.item_type {
-            ItemType::Product => product_page(_req, Path::from(slug.item_id), conn).await,
-            ItemType::Category => HttpResponse::Ok().finish(),
+        match slug.entity_type {
+            entities::sea_orm_active_enums::EntityType::Product => product_page(_req, Path::from(slug.entity_id), conn).await,
+            entities::sea_orm_active_enums::EntityType::Category => HttpResponse::Ok().finish(),
             _ => HttpResponse::Ok().finish(),
         }
     } else {
