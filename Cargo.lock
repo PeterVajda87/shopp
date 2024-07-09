@@ -2894,6 +2894,7 @@ dependencies = [
  "markup",
  "ntex",
  "ntex-files",
+ "once_cell",
  "openssl",
  "sea-orm",
  "sea-orm-migration",

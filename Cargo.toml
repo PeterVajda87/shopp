@@ -24,6 +24,7 @@ serde = { version = "*", features = ["derive"] }
 config = { version = "*" }
 ntex-files = { version = "*" }
 sea-orm-migration = { version = "*" }
+once_cell = { version = "*" }
 
 [dev-dependencies]
 curl = { version = "*" }

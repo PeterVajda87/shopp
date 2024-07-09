@@ -11,13 +11,12 @@ DECLARE
 
 BEGIN
 
-INSERT INTO media_set DEFAULT VALUES RETURNING id INTO media_set_last_id;
-
-INSERT INTO media_item (type, path, role, media_set_id) VALUES ('image', '/static/product/prd.webp', 'gallery', media_set_last_id);
+INSERT INTO media_set (id) VALUES ('11111111-1111-4111-8111-111111111111');
+INSERT INTO media_item (type, path, role, media_set_id) VALUES ('image', '/static/product/prd.webp', 'gallery', '11111111-1111-4111-8111-111111111111');
 
 INSERT INTO category (name) VALUES ('cars') RETURNING id INTO category_last_id;
 
-INSERT INTO product (name, category_id, media_set_id) VALUES ('Skoda 105', category_last_id, media_set_last_id) RETURNING id INTO product_last_id;
+INSERT INTO product (name, category_id, media_set_id) VALUES ('Skoda 105', category_last_id, '11111111-1111-4111-8111-111111111111') RETURNING id INTO product_last_id;
 
 INSERT INTO language (code, name) VALUES ('CZ', 'Čeština') RETURNING code INTO language_last_code;
 
@@ -38,5 +37,6 @@ INSERT INTO variant (attribute, attribute_value, sku) VALUES (attribute_last_nam
 INSERT INTO attribute (name) VALUES ('Color') RETURNING name INTO attribute_last_name;
 INSERT INTO attribute_value (value) VALUES ('Blue') RETURNING value INTO attribute_last_value;
 INSERT INTO variant (attribute, attribute_value, sku) VALUES (attribute_last_name, attribute_last_value, sku_last_id);
+
 
 END $$

@@ -1,34 +1,67 @@
-use crate::entities::{media_item, prelude::*, product, sku};
+use crate::entities::{
+    media_item, media_set, prelude::*, product, sea_orm_active_enums::*, sku,
+};
 use ntex::web::{
-    types::{Path, State},
-    HttpRequest, HttpResponse,
+    types::Path, HttpRequest, HttpResponse
 };
 use sea_orm::*;
 use uuid::Uuid;
+use crate::DUMMY_UUID;
+use crate::db::DB;
 
+#[derive(Debug)]
 pub struct ProductWithData {
     pub product: product::Model,
     pub gallery: Vec<media_item::Model>,
 }
 
-pub async fn product_page(
-    _req: HttpRequest,
-    id: Path<Uuid>,
-    conn: State<DatabaseConnection>,
-) -> HttpResponse {
+pub async fn product_page(_req: HttpRequest, id: Path<Uuid>) -> HttpResponse {
+    let product_data: Option<ProductWithData> = get_product_data(*id).await;
+
+    println!("{:?}", &product_data);
+
+    if let Some(product) = product_data {
+        HttpResponse::Ok().body(
+            crate::templates::product::ProductPage {
+            title: &format!("Product {} page", &product.product.name),
+            product_data: product,
+        }
+        .to_string(),
+        )
+    } else {
+        HttpResponse::Ok().body("ABC".to_string())
+    }
+}
+
+pub async fn get_product_data(product_id: Uuid) -> Option<ProductWithData> {
     let product_opt: Option<product::Model> = Product::find()
-        .filter(product::Column::Id.eq(*id))
-        .one(&*conn)
+        .filter(product::Column::Id.eq(product_id))
+        .one(&*DB)
         .await
         .expect("Failed to execute search query");
 
     if let None = product_opt {
-        HttpResponse::from("produkt som nenasiel".to_string())
+        None
     } else {
         let product = product_opt.unwrap();
-        let product_skus = Product::find()
+
+        let product_media_set = MediaSet::find()
+            .filter(media_set::Column::Id.eq(product.media_set_id.unwrap_or(*DUMMY_UUID)))
+            .one(&*DB)
+            .await
+            .expect("Failed to fetch media set")
+            .unwrap();
+
+        let gallery = MediaItem::find()
+            .filter(media_item::Column::MediaSetId.eq(product_media_set.id))
+            .filter(media_item::Column::Role.eq(MediaRole::Gallery))
+            .all(&*DB)
+            .await
+            .expect("Failed to fetch product gallery media");
+
+        let _product_skus = Product::find()
             .find_also_related(Sku)
-            .all(&*conn)
+            .all(&*DB)
             .await
             .unwrap()
             .into_iter()
@@ -36,15 +69,11 @@ pub async fn product_page(
             .collect::<Vec<sku::Model>>();
 
         let product_with_data = ProductWithData {
-            product: product.clone(),
+            product,
+            gallery
         };
-
-        HttpResponse::Ok().body(
-            crate::templates::product::ProductPage {
-                title: &format!("Product {} page", product.name),
-                product_data: product_with_data,
-            }
-            .to_string(),
-        )
+        
+        Some(product_with_data)
     }
+
 }

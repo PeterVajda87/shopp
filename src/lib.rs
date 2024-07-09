@@ -1,7 +1,8 @@
 pub mod entities;
 pub mod routes;
-pub mod settings;
 pub mod templates;
+pub mod db;
+pub mod settings;
 
 use ntex::web::{
     get, resource, types::Path, App, Error, HttpResponse, HttpServer, Responder, ServiceConfig,
@@ -10,7 +11,11 @@ use ntex_files as fs;
 use openssl::ssl::SslFiletype;
 use routes::{product::product_page, slug::route_by_slug};
 use sea_orm::DatabaseConnection;
+use uuid::Uuid;
+use once_cell::sync::Lazy;
 use settings::Settings;
+
+pub static DUMMY_UUID: Lazy<Uuid> = Lazy::new(|| Uuid::parse_str("11111111-1111-4111-8111-111111111111").expect("Failed to parse UUID"));
 
 pub trait Run {
     fn run(

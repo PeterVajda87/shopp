@@ -9,9 +9,6 @@ markup::define! {
         body {
             h1 {@product_data.product.name}
             '\n'
-            // @for pic in product_data.media.iter() {
-            //     img[src = &pic.path] {}
-            // }
         }
     }
 }
