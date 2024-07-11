@@ -13,8 +13,6 @@ async fn route_by_slug(_req: HttpRequest, slug: Path<String>) -> HttpResponse {
     .fetch_one(&*DB)
     .await;
 
-    println!("{:?}", entity);
-
     if let Ok(entity_object) = entity {
         match entity_object.entity_type {
             EntityType::Product => product_page(_req, Path::from(entity_object.entity_id)).await,

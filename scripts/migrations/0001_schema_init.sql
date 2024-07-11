@@ -38,11 +38,10 @@ CREATE TABLE "product" (
 );
 
 CREATE TABLE "description" (
-  "id" uuid DEFAULT (gen_random_uuid()),
+  "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
   "entity_id" uuid,
   "language_id" uuid NOT NULL,
-  "text" varchar,
-  PRIMARY KEY ("id", "entity_id")
+  "text" varchar
 );
 
 CREATE TABLE "sku" (
@@ -136,3 +135,7 @@ ALTER TABLE "variant" ADD FOREIGN KEY ("sku") REFERENCES "sku" ("id");
 ALTER TABLE "product" ADD FOREIGN KEY ("category_id") REFERENCES "category" ("id");
 
 ALTER TABLE "sku" ADD FOREIGN KEY ("product_id") REFERENCES "product" ("id");
+
+ALTER TABLE "description" ADD FOREIGN KEY ("language_id") REFERENCES "language" ("id");
+
+ALTER TABLE "description" ADD FOREIGN KEY ("entity_id") REFERENCES "entity" ("id");
