@@ -1,30 +1,23 @@
-use crate::entities::{self, prelude::*, slug};
-use crate::routes::product::product_page;
-use ntex::web::{
-    self,
-    types::Path,
-    HttpRequest, HttpResponse,
-};
-use sea_orm::*;
+use super::product::product_page;
 use crate::db::DB;
+use crate::structs::{Entity, EntityType};
+use ntex::web::{self, types::Path, HttpRequest, HttpResponse};
 
 #[web::get("/{slug}")]
-async fn route_by_slug(
-    _req: HttpRequest,
-    slug: Path<String>) -> HttpResponse {
-    let slug_opt: Option<slug::Model> = Slug::find()
-        .filter(slug::Column::Text.eq(slug.as_str()))
-        .one(&*DB)
-        .await
-        .expect("Failed to execute search query");
+async fn route_by_slug(_req: HttpRequest, slug: Path<String>) -> HttpResponse {
+    let entity = sqlx::query_as!(
+        Entity,
+        r#"SELECT id, entity_id, entity_type as "entity_type: EntityType" FROM entity WHERE id = (SELECT entity_id FROM slug WHERE text = $1)"#,
+        *slug
+    )
+    .fetch_one(&*DB)
+    .await;
 
-    if let Some(slug) = slug_opt {
-        println!("{:?}", &slug.entity_type);
-        match slug.entity_type {
-            entities::sea_orm_active_enums::EntityType::Product => {
-                product_page(_req, Path::from(slug.entity_id)).await
-            }
-            entities::sea_orm_active_enums::EntityType::Category => HttpResponse::Ok().finish(),
+    println!("{:?}", entity);
+
+    if let Ok(entity_object) = entity {
+        match entity_object.entity_type {
+            EntityType::Product => product_page(_req, Path::from(entity_object.entity_id)).await,
             _ => HttpResponse::Ok().finish(),
         }
     } else {

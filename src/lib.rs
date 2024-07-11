@@ -1,62 +1,52 @@
-pub mod entities;
-pub mod routes;
-pub mod templates;
 pub mod db;
+pub mod routes;
 pub mod settings;
+pub mod structs;
+pub mod templates;
 
 use ntex::web::{
     get, resource, types::Path, App, Error, HttpResponse, HttpServer, Responder, ServiceConfig,
 };
 use ntex_files as fs;
+use once_cell::sync::Lazy;
 use openssl::ssl::SslFiletype;
 use routes::{product::product_page, slug::route_by_slug};
-use sea_orm::DatabaseConnection;
+use settings::{RunMode, Settings};
 use uuid::Uuid;
-use once_cell::sync::Lazy;
-use settings::Settings;
 
-pub static DUMMY_UUID: Lazy<Uuid> = Lazy::new(|| Uuid::parse_str("11111111-1111-4111-8111-111111111111").expect("Failed to parse UUID"));
+pub static DUMMY_UUID: Lazy<Uuid> = Lazy::new(|| {
+    Uuid::parse_str("11111111-1111-4111-8111-111111111111").expect("Failed to parse UUID")
+});
+pub static RUN_MODE: Lazy<RunMode> = Lazy::new(|| RunMode::get());
+pub static SETTINGS: Lazy<Settings> =
+    Lazy::new(|| Settings::new(&RUN_MODE).expect("Failed to parse settings."));
 
 pub trait Run {
-    fn run(
-        self,
-        connection: DatabaseConnection,
-        settings: Settings,
-    ) -> Result<ntex::server::Server, std::io::Error>;
+    fn run(self, settings: &Settings) -> Result<ntex::server::Server, std::io::Error>;
 }
 
 impl Run for std::net::TcpListener {
-    fn run(
-        self,
-        connection: DatabaseConnection,
-        _settings: Settings,
-    ) -> Result<ntex::server::Server, std::io::Error> {
-        let server =
-            HttpServer::new(move || App::new().state(connection.clone()).configure(config))
-                .listen(self)?
-                .run();
+    fn run(self, _settings: &Settings) -> Result<ntex::server::Server, std::io::Error> {
+        let server = HttpServer::new(move || App::new().configure(config))
+            .listen(self)?
+            .run();
 
         Ok(server)
     }
 }
 
 impl Run for openssl::ssl::SslAcceptorBuilder {
-    fn run(
-        mut self,
-        connection: DatabaseConnection,
-        settings: Settings,
-    ) -> Result<ntex::server::Server, std::io::Error> {
-        if let Some(ssl) = settings.ssl {
-            self.set_private_key_file(ssl.private_key_file, SslFiletype::PEM)
+    fn run(mut self, settings: &Settings) -> Result<ntex::server::Server, std::io::Error> {
+        if let Some(ssl) = &settings.ssl {
+            self.set_private_key_file(&ssl.private_key_file, SslFiletype::PEM)
                 .expect("Error loading private key file.");
-            self.set_certificate_chain_file(ssl.certification_chain_file)
+            self.set_certificate_chain_file(&ssl.certification_chain_file)
                 .expect("Error loading certification chain file.");
-            self.set_ca_file(ssl.ca_file)
+            self.set_ca_file(&ssl.ca_file)
                 .expect("CA bundle not found or could not be loaded.");
-            let server =
-                HttpServer::new(move || App::new().state(connection.clone()).configure(config))
-                    .bind_openssl(("0.0.0.0", settings.application_port), self)?
-                    .run();
+            let server = HttpServer::new(move || App::new().configure(config))
+                .bind_openssl(("0.0.0.0", settings.application_port), self)?
+                .run();
 
             Ok(server)
         } else {

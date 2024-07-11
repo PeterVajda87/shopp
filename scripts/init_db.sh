@@ -1,4 +1,4 @@
-#!/usr/bin/env bash 
+#!/usr/bin/env bash
 
 # Check if a custom user has been set, otherwise default to 'postgres'
 DB_USER="${POSTGRES_USER:=postgres}"
@@ -11,7 +11,7 @@ DB_PORT="${POSTGRES_PORT:=5432}"
 # Check if a custom host has been set, otherwise default to 'localhost'
 DB_HOST="${POSTGRES_HOST:=localhost}"
 
-# Init DB 
+# Init DB
 podman run \
 --name postgres \
 --network host \
@@ -41,5 +41,4 @@ podman exec -it postgres bash -c 'for f in /etc/migrations/*.sql; do psql -h "${
 
 DATABASE_URL="postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
 export DATABASE_URL
-
-sea-orm-cli generate entity -u ${DATABASE_URL} -o src/entities
+echo $DATABASE_URL

@@ -14,17 +14,30 @@ name = "shopp"
 
 [dependencies]
 async-std = { version = "*" }
-ntex = { version = "*", default-features = false, features = ["async-std", "openssl"] }
+ntex = { version = "*", default-features = false, features = [
+    "async-std",
+    "openssl",
+] }
 openssl = { version = "*", features = ["v110", "vendored"] }
-tracing = { version = "*" }
 markup = { version = "*" }
-uuid = { version = "*", features = ["v4", "fast-rng", "macro-diagnostics", "serde"] }
-sea-orm = { version = "*", features = ["sqlx-postgres", "runtime-async-std-native-tls", "macros", "with-chrono", "with-json", "with-time", "with-uuid"] }
+uuid = { version = "*", features = [
+    "v4",
+    "fast-rng",
+    "macro-diagnostics",
+    "serde",
+] }
 serde = { version = "*", features = ["derive"] }
 config = { version = "*" }
 ntex-files = { version = "*" }
-sea-orm-migration = { version = "*" }
 once_cell = { version = "*" }
+sqlx = { version = "*", features = [
+    "runtime-async-std",
+    "tls-native-tls",
+    "postgres",
+    "macros",
+    "uuid",
+    "chrono",
+] }
 
 [dev-dependencies]
 curl = { version = "*" }

@@ -1,16 +1,15 @@
 use once_cell::sync::Lazy;
-use sea_orm::{DatabaseConnection, Database};
-use crate::settings;
+use sqlx::{postgres::PgPoolOptions, PgPool};
+use crate::SETTINGS;
 
-fn init_db_connection() -> DatabaseConnection {
-    let run_mode = settings::RunMode::get();
-    let settings = settings::Settings::new(&run_mode).expect("Failed to parse settings."); 
-
+fn init_db_connection() -> PgPool {
     async_std::task::block_on(async {
-        Database::connect(&settings.database.connection_string())
+        PgPoolOptions::new()
+        .max_connections(5)
+        .connect(&SETTINGS.database.connection_string())
         .await
         .expect("Failed to connect to PostgreSQL database")
     })
 }
 
-pub static DB: Lazy<DatabaseConnection> = Lazy::new(|| init_db_connection());
+pub static DB: Lazy<PgPool> = Lazy::new(|| init_db_connection());
