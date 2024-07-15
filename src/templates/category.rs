@@ -1,7 +1,5 @@
-use crate::structs::Category;
-
 markup::define! {
-    CategoryPage<'a>(title: &'a str, category: Category) {
+    CategoryPage<'a>(title: &'a str) {
         @markup::doctype()
         html {
             { title }

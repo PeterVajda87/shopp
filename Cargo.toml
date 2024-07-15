@@ -13,6 +13,8 @@ name = "shopp"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+entity = { path = "entity" }
+migration = { path = "migration" }
 async-std = { version = "*" }
 ntex = { version = "*", default-features = false, features = [
     "async-std",
@@ -27,17 +29,19 @@ uuid = { version = "*", features = [
     "serde",
 ] }
 serde = { version = "*", features = ["derive"] }
+serde_json = { version = "*" }
 config = { version = "*" }
 ntex-files = { version = "*" }
 once_cell = { version = "*" }
-sqlx = { version = "*", features = [
-    "runtime-async-std",
-    "tls-native-tls",
-    "postgres",
+sea-orm = { version = "*", features = [
+    "sqlx-postgres",
+    "runtime-async-std-native-tls",
     "macros",
-    "uuid",
-    "chrono",
+    "with-chrono",
+    "with-uuid",
 ] }
-
 [dev-dependencies]
 curl = { version = "*" }
+
+[workspace]
+members = [".", "entity", "migration"]

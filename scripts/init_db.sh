@@ -36,9 +36,6 @@ sleep 1
 done
 >&2 echo "Postgres is up and running on port ${DB_PORT}!"
 
->&2 echo "Running migrations"
-podman exec -it postgres bash -c 'for f in /etc/migrations/*.sql; do psql -h "${DB_HOST}" -U "${DB_USER}" -p "${DB_PORT}" -d "shopp" -a -f "$f"; done'
-
 DATABASE_URL="postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}"
 export DATABASE_URL
 echo $DATABASE_URL

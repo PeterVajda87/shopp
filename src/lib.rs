@@ -1,22 +1,18 @@
 pub mod db;
 pub mod routes;
 pub mod settings;
-pub mod structs;
 pub mod templates;
 
+use db::DB;
 use ntex::web::{
     get, resource, types::Path, App, Error, HttpResponse, HttpServer, Responder, ServiceConfig,
 };
 use ntex_files as fs;
 use once_cell::sync::Lazy;
 use openssl::ssl::SslFiletype;
-use routes::{product::product_page, slug::route_by_slug};
+use routes::{product_page, route_by_slug};
 use settings::{RunMode, Settings};
-use uuid::Uuid;
 
-pub static DUMMY_UUID: Lazy<Uuid> = Lazy::new(|| {
-    Uuid::parse_str("11111111-1111-4111-8111-111111111111").expect("Failed to parse UUID")
-});
 pub static RUN_MODE: Lazy<RunMode> = Lazy::new(|| RunMode::get());
 pub static SETTINGS: Lazy<Settings> =
     Lazy::new(|| Settings::new(&RUN_MODE).expect("Failed to parse settings."));
@@ -30,7 +26,6 @@ impl Run for std::net::TcpListener {
         let server = HttpServer::new(move || App::new().configure(config))
             .listen(self)?
             .run();
-
         Ok(server)
     }
 }
@@ -79,4 +74,8 @@ pub fn config(cfg: &mut ServiceConfig) {
         .service(route_by_slug)
         .service(static_file)
         .service(resource("/product/{id}").route(get().to(product_page)));
+}
+
+pub async fn seed_dummy_data() {
+    todo!()
 }
