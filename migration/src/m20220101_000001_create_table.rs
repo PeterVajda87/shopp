@@ -1,4 +1,6 @@
-use sea_orm::{IntoSimpleExpr, Value};
+use sea_orm::ActiveValue::Set;
+use sea_orm::{ActiveEnum, ActiveValue, IntoSimpleExpr, Value};
+use sea_orm_migration::prelude::sea_query::extension::postgres::Type;
 use sea_orm_migration::prelude::*;
 use uuid::Uuid;
 
@@ -37,7 +39,7 @@ impl MigrationTrait for Migration {
             .columns([Product::Name, Product::Id])
             .values_panic([
                 "Skoda 105".into(),
-                SimpleExpr::Value(Value::Uuid(product_uuid)),
+                SimpleExpr::Value(Value::Uuid(product_uuid.clone())),
             ])
             .returning_col(Product::Id)
             .to_owned();
@@ -74,16 +76,19 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        // let category_uuid = Uuid::new_v4();
+        let category_uuid: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
 
-        // let insert_category: InsertStatement = Query::insert()
-        //     .into_table(Category::Table)
-        //     .columns([Category::Name, Category::Id])
-        //     .values_panic(["Auta".into(), category_uuid.to_string().into()])
-        //     .returning_all()
-        //     .to_owned();
+        let insert_category: InsertStatement = Query::insert()
+            .into_table(Category::Table)
+            .columns([Category::Name, Category::Id])
+            .values_panic([
+                "Cars".into(),
+                SimpleExpr::Value(Value::Uuid(category_uuid.clone())),
+            ])
+            .returning_all()
+            .to_owned();
 
-        // manager.exec_stmt(insert_category).await?;
+        manager.exec_stmt(insert_category).await?;
 
         manager
             .create_table(
@@ -120,17 +125,17 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        // let insert_product_category: InsertStatement = Query::insert()
-        //     .into_table(ProductCategory::Table)
-        //     .columns([ProductCategory::ProductId, ProductCategory::CategoryId])
-        //     .values_panic([
-        //         product_uuid.to_string().into(),
-        //         category_uuid.to_string().into(),
-        //     ])
-        //     .returning_all()
-        //     .to_owned();
+        let insert_product_category: InsertStatement = Query::insert()
+            .into_table(ProductCategory::Table)
+            .columns([ProductCategory::ProductId, ProductCategory::CategoryId])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(product_uuid.clone())),
+                SimpleExpr::Value(Value::Uuid(category_uuid.clone())),
+            ])
+            .returning_all()
+            .to_owned();
 
-        // manager.exec_stmt(insert_product_category).await?;
+        manager.exec_stmt(insert_product_category).await?;
 
         manager
             .create_table(
@@ -185,6 +190,66 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        manager
+            .create_type(
+                Type::create()
+                    .as_enum(EntityType::Enum)
+                    .values([EntityType::Sku, EntityType::Product, EntityType::Category])
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(Slug::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(Slug::Id)
+                            .uuid()
+                            .not_null()
+                            .primary_key()
+                            .default(PgFunc::gen_random_uuid()),
+                    )
+                    .col(
+                        ColumnDef::new(Slug::EntityType)
+                            .custom(EntityType::Enum)
+                            .not_null(),
+                    )
+                    .col(ColumnDef::new(Slug::EntityId).uuid().not_null())
+                    .col(ColumnDef::new(Slug::Text).text().not_null())
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_index(
+                Index::create()
+                    .if_not_exists()
+                    .name("idx-slug_text")
+                    .table(Slug::Table)
+                    .col(Slug::Text)
+                    .unique()
+                    .to_owned(),
+            )
+            .await?;
+
+        let slug_uuid: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
+
+        let insert_slug: InsertStatement = Query::insert()
+            .into_table(Slug::Table)
+            .columns([Slug::Id, Slug::Text, Slug::EntityType, Slug::EntityId])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(slug_uuid)),
+                "Auta".into(),
+                Expr::val("Category").as_enum(Alias::new("entity_type")),
+                SimpleExpr::Value(Value::Uuid(category_uuid)),
+            ])
+            .returning_all()
+            .to_owned();
+
+        manager.exec_stmt(insert_slug).await?;
+
         Ok(())
     }
 
@@ -232,4 +297,25 @@ enum SkuProduct {
     Table,
     SkuId,
     ProductId,
+}
+
+#[derive(DeriveIden)]
+enum Slug {
+    Table,
+    Id,
+    EntityId,
+    EntityType,
+    Text,
+}
+
+#[derive(DeriveIden)]
+pub enum EntityType {
+    #[sea_orm(iden = "entity_type")]
+    Enum,
+    #[sea_orm(iden = "Sku")]
+    Sku,
+    #[sea_orm(iden = "Product")]
+    Product,
+    #[sea_orm(iden = "Category")]
+    Category,
 }

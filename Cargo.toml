@@ -13,7 +13,6 @@ name = "shopp"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-entity = { path = "entity" }
 migration = { path = "migration" }
 async-std = { version = "*" }
 ntex = { version = "*", default-features = false, features = [
@@ -44,4 +43,4 @@ sea-orm = { version = "*", features = [
 curl = { version = "*" }
 
 [workspace]
-members = [".", "entity", "migration"]
+members = [".", "migration"]
