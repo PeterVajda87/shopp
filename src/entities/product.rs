@@ -15,6 +15,8 @@ pub struct Model {
 pub enum Relation {
     #[sea_orm(has_many = "super::product_category::Entity")]
     ProductCategory,
+    #[sea_orm(has_many = "super::product_description::Entity")]
+    ProductDescription,
     #[sea_orm(has_many = "super::sku_product::Entity")]
     SkuProduct,
 }
@@ -22,6 +24,12 @@ pub enum Relation {
 impl Related<super::product_category::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::ProductCategory.def()
+    }
+}
+
+impl Related<super::product_description::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::ProductDescription.def()
     }
 }
 
@@ -37,6 +45,15 @@ impl Related<super::category::Entity> for Entity {
     }
     fn via() -> Option<RelationDef> {
         Some(super::product_category::Relation::Product.def().rev())
+    }
+}
+
+impl Related<super::description::Entity> for Entity {
+    fn to() -> RelationDef {
+        super::product_description::Relation::Description.def()
+    }
+    fn via() -> Option<RelationDef> {
+        Some(super::product_description::Relation::Product.def().rev())
     }
 }
 

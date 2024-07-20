@@ -22,13 +22,30 @@ pub enum Relation {
         on_delete = "SetNull"
     )]
     SelfRef,
+    #[sea_orm(has_many = "super::category_description::Entity")]
+    CategoryDescription,
     #[sea_orm(has_many = "super::product_category::Entity")]
     ProductCategory,
+}
+
+impl Related<super::category_description::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::CategoryDescription.def()
+    }
 }
 
 impl Related<super::product_category::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::ProductCategory.def()
+    }
+}
+
+impl Related<super::description::Entity> for Entity {
+    fn to() -> RelationDef {
+        super::category_description::Relation::Description.def()
+    }
+    fn via() -> Option<RelationDef> {
+        Some(super::category_description::Relation::Category.def().rev())
     }
 }
 

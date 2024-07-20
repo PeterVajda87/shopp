@@ -1,16 +1,17 @@
 pub mod db;
+pub mod entities;
 pub mod routes;
 pub mod settings;
+pub mod structs;
 pub mod templates;
 
-use db::DB;
 use ntex::web::{
     get, resource, types::Path, App, Error, HttpResponse, HttpServer, Responder, ServiceConfig,
 };
 use ntex_files as fs;
 use once_cell::sync::Lazy;
 use openssl::ssl::SslFiletype;
-use routes::{product_page, route_by_slug};
+use routes::*;
 use settings::{RunMode, Settings};
 
 pub static RUN_MODE: Lazy<RunMode> = Lazy::new(|| RunMode::get());
@@ -73,7 +74,8 @@ pub fn config(cfg: &mut ServiceConfig) {
         .service(catalog_file)
         .service(route_by_slug)
         .service(static_file)
-        .service(resource("/product/{id}").route(get().to(product_page)));
+        .service(resource("/product/{id}").route(get().to(product_page)))
+        .service(resource("/category/{id}").route(get().to(category_page)));
 }
 
 pub async fn seed_dummy_data() {

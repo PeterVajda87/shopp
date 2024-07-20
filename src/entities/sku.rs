@@ -13,13 +13,30 @@ pub struct Model {
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
 pub enum Relation {
+    #[sea_orm(has_many = "super::sku_description::Entity")]
+    SkuDescription,
     #[sea_orm(has_many = "super::sku_product::Entity")]
     SkuProduct,
+}
+
+impl Related<super::sku_description::Entity> for Entity {
+    fn to() -> RelationDef {
+        Relation::SkuDescription.def()
+    }
 }
 
 impl Related<super::sku_product::Entity> for Entity {
     fn to() -> RelationDef {
         Relation::SkuProduct.def()
+    }
+}
+
+impl Related<super::description::Entity> for Entity {
+    fn to() -> RelationDef {
+        super::sku_description::Relation::Description.def()
+    }
+    fn via() -> Option<RelationDef> {
+        Some(super::sku_description::Relation::Sku.def().rev())
     }
 }
 

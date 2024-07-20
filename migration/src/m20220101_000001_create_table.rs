@@ -1,5 +1,4 @@
-use sea_orm::ActiveValue::Set;
-use sea_orm::{ActiveEnum, ActiveValue, IntoSimpleExpr, Value};
+use sea_orm::Value;
 use sea_orm_migration::prelude::sea_query::extension::postgres::Type;
 use sea_orm_migration::prelude::*;
 use uuid::Uuid;
@@ -45,6 +44,20 @@ impl MigrationTrait for Migration {
             .to_owned();
 
         manager.exec_stmt(insert_product).await.unwrap();
+
+        let product_uuid_2: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
+
+        let insert_product_2: InsertStatement = Query::insert()
+            .into_table(Product::Table)
+            .columns([Product::Name, Product::Id])
+            .values_panic([
+                "Skoda 120".into(),
+                SimpleExpr::Value(Value::Uuid(product_uuid_2.clone())),
+            ])
+            .returning_col(Product::Id)
+            .to_owned();
+
+        manager.exec_stmt(insert_product_2).await.unwrap();
 
         manager
             .create_table(
@@ -159,6 +172,20 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        let sku_uuid: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
+
+        let insert_sku: InsertStatement = Query::insert()
+            .into_table(Sku::Table)
+            .columns([Sku::Id, Sku::Name])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(sku_uuid.clone())),
+                "Family Sedan".into(),
+            ])
+            .returning_all()
+            .to_owned();
+
+        manager.exec_stmt(insert_sku).await?;
+
         manager
             .create_table(
                 Table::create()
@@ -195,6 +222,153 @@ impl MigrationTrait for Migration {
                 Type::create()
                     .as_enum(EntityType::Enum)
                     .values([EntityType::Sku, EntityType::Product, EntityType::Category])
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(Description::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(Description::Id)
+                            .uuid()
+                            .not_null()
+                            .primary_key()
+                            .default(PgFunc::gen_random_uuid()),
+                    )
+                    .col(ColumnDef::new(Description::Text).text())
+                    .to_owned(),
+            )
+            .await?;
+
+        let description_uuid: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
+
+        let insert_description: InsertStatement = Query::insert()
+            .into_table(Description::Table)
+            .columns([Description::Id, Description::Text])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(description_uuid.clone())),
+                "Ahoj, ja som popis, kde ma chces pouzit? Kategoria? Produkt?".into(),
+            ])
+            .returning_all()
+            .to_owned();
+
+        manager.exec_stmt(insert_description).await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(SkuDescription::Table)
+                    .if_not_exists()
+                    .col(ColumnDef::new(SkuDescription::SkuId).uuid().not_null())
+                    .col(
+                        ColumnDef::new(SkuDescription::DescriptionId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .primary_key(
+                        Index::create()
+                            .table(SkuDescription::Table)
+                            .col(SkuDescription::SkuId)
+                            .col(SkuDescription::DescriptionId),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(SkuDescription::Table, SkuDescription::SkuId)
+                            .to(Sku::Table, Sku::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(SkuDescription::Table, SkuDescription::DescriptionId)
+                            .to(Description::Table, Description::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(ProductDescription::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(ProductDescription::ProductId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(ProductDescription::DescriptionId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .primary_key(
+                        Index::create()
+                            .table(ProductDescription::Table)
+                            .col(ProductDescription::ProductId)
+                            .col(ProductDescription::DescriptionId),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(ProductDescription::Table, ProductDescription::ProductId)
+                            .to(Product::Table, Product::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(ProductDescription::Table, ProductDescription::DescriptionId)
+                            .to(Description::Table, Description::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(CategoryDescription::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(CategoryDescription::CategoryId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(CategoryDescription::DescriptionId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .primary_key(
+                        Index::create()
+                            .table(CategoryDescription::Table)
+                            .col(CategoryDescription::CategoryId)
+                            .col(CategoryDescription::DescriptionId),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(CategoryDescription::Table, CategoryDescription::CategoryId)
+                            .to(Category::Table, Category::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(
+                                CategoryDescription::Table,
+                                CategoryDescription::DescriptionId,
+                            )
+                            .to(Description::Table, Description::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -242,13 +416,67 @@ impl MigrationTrait for Migration {
             .values_panic([
                 SimpleExpr::Value(Value::Uuid(slug_uuid)),
                 "Auta".into(),
-                Expr::val("Category").as_enum(Alias::new("entity_type")),
-                SimpleExpr::Value(Value::Uuid(category_uuid)),
+                Expr::val("Product").as_enum(Alias::new("entity_type")),
+                SimpleExpr::Value(Value::Uuid(product_uuid.clone())),
             ])
             .returning_all()
             .to_owned();
 
         manager.exec_stmt(insert_slug).await?;
+
+        let insert_product_description = Query::insert()
+            .into_table(ProductDescription::Table)
+            .columns([
+                ProductDescription::ProductId,
+                ProductDescription::DescriptionId,
+            ])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(product_uuid.clone())),
+                SimpleExpr::Value(Value::Uuid(description_uuid.clone())),
+            ])
+            .returning_all()
+            .to_owned();
+
+        manager.exec_stmt(insert_product_description).await?;
+
+        let insert_category_description = Query::insert()
+            .into_table(CategoryDescription::Table)
+            .columns([
+                CategoryDescription::CategoryId,
+                CategoryDescription::DescriptionId,
+            ])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(category_uuid.clone())),
+                SimpleExpr::Value(Value::Uuid(description_uuid.clone())),
+            ])
+            .returning_all()
+            .to_owned();
+
+        manager.exec_stmt(insert_category_description).await?;
+
+        let insert_sku_description = Query::insert()
+            .into_table(SkuDescription::Table)
+            .columns([SkuDescription::SkuId, SkuDescription::DescriptionId])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(sku_uuid.clone())),
+                SimpleExpr::Value(Value::Uuid(description_uuid.clone())),
+            ])
+            .returning_all()
+            .to_owned();
+
+        manager.exec_stmt(insert_sku_description).await?;
+
+        let insert_sku_product: InsertStatement = Query::insert()
+            .into_table(SkuProduct::Table)
+            .columns([SkuProduct::SkuId, SkuProduct::ProductId])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(sku_uuid.clone())),
+                SimpleExpr::Value(Value::Uuid(product_uuid.clone())),
+            ])
+            .returning_all()
+            .to_owned();
+
+        manager.exec_stmt(insert_sku_product).await?;
 
         Ok(())
     }
@@ -297,6 +525,34 @@ enum SkuProduct {
     Table,
     SkuId,
     ProductId,
+}
+
+#[derive(DeriveIden)]
+enum Description {
+    Table,
+    Id,
+    Text,
+}
+
+#[derive(DeriveIden)]
+enum ProductDescription {
+    Table,
+    ProductId,
+    DescriptionId,
+}
+
+#[derive(DeriveIden)]
+enum SkuDescription {
+    Table,
+    SkuId,
+    DescriptionId,
+}
+
+#[derive(DeriveIden)]
+enum CategoryDescription {
+    Table,
+    CategoryId,
+    DescriptionId,
 }
 
 #[derive(DeriveIden)]

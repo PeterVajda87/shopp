@@ -3,7 +3,13 @@
 pub mod prelude;
 
 pub mod category;
+pub mod category_description;
+pub mod description;
 pub mod product;
 pub mod product_category;
+pub mod product_description;
+pub mod sea_orm_active_enums;
 pub mod sku;
+pub mod sku_description;
 pub mod sku_product;
+pub mod slug;
