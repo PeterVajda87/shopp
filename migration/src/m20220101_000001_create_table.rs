@@ -9,6 +9,25 @@ pub struct Migration;
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
+        // Create table language
+        manager
+            .create_table(
+                Table::create()
+                    .table(Language::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(Language::Id)
+                            .uuid()
+                            .not_null()
+                            .default(PgFunc::gen_random_uuid()),
+                    )
+                    .col(ColumnDef::new(Language::Code).not_null().string_len(2))
+                    .col(ColumnDef::new(Language::Name).not_null().string())
+                    .to_owned(),
+            )
+            .await?;
+
+        // Create table product
         manager
             .create_table(
                 Table::create()
@@ -31,34 +50,7 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        let product_uuid: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
-
-        let insert_product: InsertStatement = Query::insert()
-            .into_table(Product::Table)
-            .columns([Product::Name, Product::Id])
-            .values_panic([
-                "Skoda 105".into(),
-                SimpleExpr::Value(Value::Uuid(product_uuid.clone())),
-            ])
-            .returning_col(Product::Id)
-            .to_owned();
-
-        manager.exec_stmt(insert_product).await.unwrap();
-
-        let product_uuid_2: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
-
-        let insert_product_2: InsertStatement = Query::insert()
-            .into_table(Product::Table)
-            .columns([Product::Name, Product::Id])
-            .values_panic([
-                "Skoda 120".into(),
-                SimpleExpr::Value(Value::Uuid(product_uuid_2.clone())),
-            ])
-            .returning_col(Product::Id)
-            .to_owned();
-
-        manager.exec_stmt(insert_product_2).await.unwrap();
-
+        // Create table category
         manager
             .create_table(
                 Table::create()
@@ -89,20 +81,7 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        let category_uuid: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
-
-        let insert_category: InsertStatement = Query::insert()
-            .into_table(Category::Table)
-            .columns([Category::Name, Category::Id])
-            .values_panic([
-                "Cars".into(),
-                SimpleExpr::Value(Value::Uuid(category_uuid.clone())),
-            ])
-            .returning_all()
-            .to_owned();
-
-        manager.exec_stmt(insert_category).await?;
-
+        // Create table product_category
         manager
             .create_table(
                 Table::create()
@@ -138,18 +117,7 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        let insert_product_category: InsertStatement = Query::insert()
-            .into_table(ProductCategory::Table)
-            .columns([ProductCategory::ProductId, ProductCategory::CategoryId])
-            .values_panic([
-                SimpleExpr::Value(Value::Uuid(product_uuid.clone())),
-                SimpleExpr::Value(Value::Uuid(category_uuid.clone())),
-            ])
-            .returning_all()
-            .to_owned();
-
-        manager.exec_stmt(insert_product_category).await?;
-
+        // Create table sku
         manager
             .create_table(
                 Table::create()
@@ -172,20 +140,7 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        let sku_uuid: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
-
-        let insert_sku: InsertStatement = Query::insert()
-            .into_table(Sku::Table)
-            .columns([Sku::Id, Sku::Name])
-            .values_panic([
-                SimpleExpr::Value(Value::Uuid(sku_uuid.clone())),
-                "Family Sedan".into(),
-            ])
-            .returning_all()
-            .to_owned();
-
-        manager.exec_stmt(insert_sku).await?;
-
+        // Create table sku_product
         manager
             .create_table(
                 Table::create()
@@ -217,6 +172,7 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        // Create type EntityType (sku, product, category)
         manager
             .create_type(
                 Type::create()
@@ -226,6 +182,7 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        // Create table description
         manager
             .create_table(
                 Table::create()
@@ -238,25 +195,12 @@ impl MigrationTrait for Migration {
                             .primary_key()
                             .default(PgFunc::gen_random_uuid()),
                     )
-                    .col(ColumnDef::new(Description::Text).text())
+                    .col(ColumnDef::new(Description::Text).string())
                     .to_owned(),
             )
             .await?;
 
-        let description_uuid: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
-
-        let insert_description: InsertStatement = Query::insert()
-            .into_table(Description::Table)
-            .columns([Description::Id, Description::Text])
-            .values_panic([
-                SimpleExpr::Value(Value::Uuid(description_uuid.clone())),
-                "Ahoj, ja som popis, kde ma chces pouzit? Kategoria? Produkt?".into(),
-            ])
-            .returning_all()
-            .to_owned();
-
-        manager.exec_stmt(insert_description).await?;
-
+        // Create table sku_description
         manager
             .create_table(
                 Table::create()
@@ -391,7 +335,7 @@ impl MigrationTrait for Migration {
                             .not_null(),
                     )
                     .col(ColumnDef::new(Slug::EntityId).uuid().not_null())
-                    .col(ColumnDef::new(Slug::Text).text().not_null())
+                    .col(ColumnDef::new(Slug::Text).string().not_null())
                     .to_owned(),
             )
             .await?;
@@ -408,7 +352,89 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        // Create UUIDs for sample data
+        let language_uuid: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
+        let language_uuid_2: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
+        let product_uuid: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
+        let product_uuid_2: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
+        let category_uuid: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
+        let sku_uuid: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
+        let sku_uuid_2: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
         let slug_uuid: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
+        let description_uuid: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
+
+        // Create insert queries
+        let insert_language: InsertStatement = Query::insert()
+            .into_table(Language::Table)
+            .columns([Language::Id, Language::Code, Language::Name])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(language_uuid)),
+                "en".into(),
+                "English".into(),
+            ])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(language_uuid_2)),
+                "cz".into(),
+                "Česky".into(),
+            ])
+            .to_owned();
+
+        let insert_product: InsertStatement = Query::insert()
+            .into_table(Product::Table)
+            .columns([Product::Name, Product::Id])
+            .values_panic([
+                "Skoda 120".into(),
+                SimpleExpr::Value(Value::Uuid(product_uuid.clone())),
+            ])
+            .values_panic([
+                "Skoda 105".into(),
+                SimpleExpr::Value(Value::Uuid(product_uuid_2.clone())),
+            ])
+            .to_owned();
+
+        let insert_category: InsertStatement = Query::insert()
+            .into_table(Category::Table)
+            .columns([Category::Name, Category::Id])
+            .values_panic([
+                "Cars".into(),
+                SimpleExpr::Value(Value::Uuid(category_uuid.clone())),
+            ])
+            .to_owned();
+
+        let insert_product_category: InsertStatement = Query::insert()
+            .into_table(ProductCategory::Table)
+            .columns([ProductCategory::ProductId, ProductCategory::CategoryId])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(product_uuid.clone())),
+                SimpleExpr::Value(Value::Uuid(category_uuid.clone())),
+            ])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(product_uuid_2.clone())),
+                SimpleExpr::Value(Value::Uuid(category_uuid.clone())),
+            ])
+            .to_owned();
+
+        let insert_sku: InsertStatement = Query::insert()
+            .into_table(Sku::Table)
+            .columns([Sku::Id, Sku::Name])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(sku_uuid.clone())),
+                "Family Sedan".into(),
+            ])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(sku_uuid_2.clone())),
+                "Sport Coupe".into(),
+            ])
+            .to_owned();
+
+        let insert_sku_product: InsertStatement = Query::insert()
+            .into_table(SkuProduct::Table)
+            .columns([SkuProduct::SkuId, SkuProduct::ProductId])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(sku_uuid.clone())),
+                SimpleExpr::Value(Value::Uuid(product_uuid.clone())),
+            ])
+            .to_owned();
 
         let insert_slug: InsertStatement = Query::insert()
             .into_table(Slug::Table)
@@ -419,10 +445,16 @@ impl MigrationTrait for Migration {
                 Expr::val("Product").as_enum(Alias::new("entity_type")),
                 SimpleExpr::Value(Value::Uuid(product_uuid.clone())),
             ])
-            .returning_all()
             .to_owned();
 
-        manager.exec_stmt(insert_slug).await?;
+        let insert_description: InsertStatement = Query::insert()
+            .into_table(Description::Table)
+            .columns([Description::Id, Description::Text])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(description_uuid.clone())),
+                "Ahoj, ja som popis, kde ma chces pouzit? Kategoria? Produkt?".into(),
+            ])
+            .to_owned();
 
         let insert_product_description = Query::insert()
             .into_table(ProductDescription::Table)
@@ -434,10 +466,7 @@ impl MigrationTrait for Migration {
                 SimpleExpr::Value(Value::Uuid(product_uuid.clone())),
                 SimpleExpr::Value(Value::Uuid(description_uuid.clone())),
             ])
-            .returning_all()
             .to_owned();
-
-        manager.exec_stmt(insert_product_description).await?;
 
         let insert_category_description = Query::insert()
             .into_table(CategoryDescription::Table)
@@ -449,10 +478,7 @@ impl MigrationTrait for Migration {
                 SimpleExpr::Value(Value::Uuid(category_uuid.clone())),
                 SimpleExpr::Value(Value::Uuid(description_uuid.clone())),
             ])
-            .returning_all()
             .to_owned();
-
-        manager.exec_stmt(insert_category_description).await?;
 
         let insert_sku_description = Query::insert()
             .into_table(SkuDescription::Table)
@@ -461,22 +487,20 @@ impl MigrationTrait for Migration {
                 SimpleExpr::Value(Value::Uuid(sku_uuid.clone())),
                 SimpleExpr::Value(Value::Uuid(description_uuid.clone())),
             ])
-            .returning_all()
             .to_owned();
 
-        manager.exec_stmt(insert_sku_description).await?;
-
-        let insert_sku_product: InsertStatement = Query::insert()
-            .into_table(SkuProduct::Table)
-            .columns([SkuProduct::SkuId, SkuProduct::ProductId])
-            .values_panic([
-                SimpleExpr::Value(Value::Uuid(sku_uuid.clone())),
-                SimpleExpr::Value(Value::Uuid(product_uuid.clone())),
-            ])
-            .returning_all()
-            .to_owned();
-
+        // Perform DB inserts
+        manager.exec_stmt(insert_language).await?;
+        manager.exec_stmt(insert_category).await?;
+        manager.exec_stmt(insert_product).await?;
+        manager.exec_stmt(insert_product_category).await?;
+        manager.exec_stmt(insert_sku).await?;
         manager.exec_stmt(insert_sku_product).await?;
+        manager.exec_stmt(insert_slug).await?;
+        manager.exec_stmt(insert_description).await?;
+        manager.exec_stmt(insert_category_description).await?;
+        manager.exec_stmt(insert_sku_description).await?;
+        manager.exec_stmt(insert_product_description).await?;
 
         Ok(())
     }
@@ -486,6 +510,14 @@ impl MigrationTrait for Migration {
             .drop_table(Table::drop().table(Product::Table).to_owned())
             .await
     }
+}
+
+#[derive(DeriveIden)]
+enum Language {
+    Table,
+    Id,
+    Code,
+    Name,
 }
 
 #[derive(DeriveIden)]
