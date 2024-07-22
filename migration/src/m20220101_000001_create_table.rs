@@ -182,6 +182,30 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        // Create type MediaType (image, video, document)
+        manager
+            .create_type(
+                Type::create()
+                    .as_enum(MediaType::Enum)
+                    .values([MediaType::Image, MediaType::Video, MediaType::Document])
+                    .to_owned(),
+            )
+            .await?;
+
+        // Create type MediaRole (image, video, document)
+        manager
+            .create_type(
+                Type::create()
+                    .as_enum(MediaRole::Enum)
+                    .values([
+                        MediaRole::Attachment,
+                        MediaRole::Gallery,
+                        MediaRole::Description,
+                    ])
+                    .to_owned(),
+            )
+            .await?;
+
         // Create table description
         manager
             .create_table(
@@ -196,6 +220,14 @@ impl MigrationTrait for Migration {
                             .default(PgFunc::gen_random_uuid()),
                     )
                     .col(ColumnDef::new(Description::Text).string())
+                    .col(ColumnDef::new(Description::LanguageId).uuid().not_null())
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(Description::Table, Description::LanguageId)
+                            .to(Language::Table, Language::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -352,6 +384,109 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        manager
+            .create_table(
+                Table::create()
+                    .table(Media::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(Media::Id)
+                            .uuid()
+                            .not_null()
+                            .primary_key()
+                            .default(PgFunc::gen_random_uuid()),
+                    )
+                    .col(
+                        ColumnDef::new(Media::MediaType)
+                            .custom(MediaType::Enum)
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(Media::MediaRole)
+                            .custom(MediaRole::Enum)
+                            .not_null(),
+                    )
+                    .col(ColumnDef::new(Media::Path).string().not_null())
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(MediaSet::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(MediaSet::Id)
+                            .uuid()
+                            .not_null()
+                            .primary_key()
+                            .default(PgFunc::gen_random_uuid()),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(MediaMediaSet::Table)
+                    .if_not_exists()
+                    .col(ColumnDef::new(MediaMediaSet::MediaId).uuid().not_null())
+                    .col(ColumnDef::new(MediaMediaSet::MediaSetId).uuid().not_null())
+                    .primary_key(
+                        Index::create()
+                            .table(MediaMediaSet::Table)
+                            .col(MediaMediaSet::MediaId)
+                            .col(MediaMediaSet::MediaSetId),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(MediaMediaSet::Table, MediaMediaSet::MediaId)
+                            .to(Media::Table, Media::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(MediaMediaSet::Table, MediaMediaSet::MediaSetId)
+                            .to(MediaSet::Table, MediaSet::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(MediaSetEntity::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(MediaSetEntity::Id)
+                            .uuid()
+                            .not_null()
+                            .primary_key()
+                            .default(PgFunc::gen_random_uuid()),
+                    )
+                    .col(ColumnDef::new(MediaSetEntity::MediaSetId).uuid().not_null())
+                    .col(ColumnDef::new(MediaSetEntity::EntityId).uuid().not_null())
+                    .primary_key(
+                        Index::create()
+                            .table(MediaSetEntity::Table)
+                            .col(MediaSetEntity::MediaSetId)
+                            .col(MediaSetEntity::EntityId),
+                    )
+                    .col(
+                        ColumnDef::new(MediaSetEntity::EntityType)
+                            .custom(EntityType::Enum)
+                            .not_null(),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
         // Create UUIDs for sample data
         let language_uuid: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
         let language_uuid_2: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
@@ -368,12 +503,12 @@ impl MigrationTrait for Migration {
             .into_table(Language::Table)
             .columns([Language::Id, Language::Code, Language::Name])
             .values_panic([
-                SimpleExpr::Value(Value::Uuid(language_uuid)),
+                SimpleExpr::Value(Value::Uuid(language_uuid.clone())),
                 "en".into(),
                 "English".into(),
             ])
             .values_panic([
-                SimpleExpr::Value(Value::Uuid(language_uuid_2)),
+                SimpleExpr::Value(Value::Uuid(language_uuid_2.clone())),
                 "cz".into(),
                 "Česky".into(),
             ])
@@ -449,10 +584,16 @@ impl MigrationTrait for Migration {
 
         let insert_description: InsertStatement = Query::insert()
             .into_table(Description::Table)
-            .columns([Description::Id, Description::Text])
+            .columns([Description::Id, Description::Text, Description::LanguageId])
             .values_panic([
                 SimpleExpr::Value(Value::Uuid(description_uuid.clone())),
-                "Ahoj, ja som popis, kde ma chces pouzit? Kategoria? Produkt?".into(),
+                "Hello, I am an English description".into(),
+                SimpleExpr::Value(Value::Uuid(language_uuid.clone())),
+            ])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(description_uuid.clone())),
+                "A ja jsem zas cesky popis".into(),
+                SimpleExpr::Value(Value::Uuid(language_uuid_2.clone())),
             ])
             .to_owned();
 
@@ -564,6 +705,7 @@ enum Description {
     Table,
     Id,
     Text,
+    LanguageId,
 }
 
 #[derive(DeriveIden)]
@@ -597,6 +739,37 @@ enum Slug {
 }
 
 #[derive(DeriveIden)]
+enum Media {
+    Table,
+    Id,
+    MediaType,
+    MediaRole,
+    Path,
+}
+
+#[derive(DeriveIden)]
+enum MediaSet {
+    Table,
+    Id,
+}
+
+#[derive(DeriveIden)]
+enum MediaMediaSet {
+    Table,
+    MediaId,
+    MediaSetId,
+}
+
+#[derive(DeriveIden)]
+enum MediaSetEntity {
+    Table,
+    Id,
+    MediaSetId,
+    EntityId,
+    EntityType,
+}
+
+#[derive(DeriveIden)]
 pub enum EntityType {
     #[sea_orm(iden = "entity_type")]
     Enum,
@@ -606,4 +779,28 @@ pub enum EntityType {
     Product,
     #[sea_orm(iden = "Category")]
     Category,
+}
+
+#[derive(DeriveIden)]
+pub enum MediaType {
+    #[sea_orm(iden = "media_type")]
+    Enum,
+    #[sea_orm(iden = "Image")]
+    Image,
+    #[sea_orm(iden = "Video")]
+    Video,
+    #[sea_orm(iden = "Document")]
+    Document,
+}
+
+#[derive(DeriveIden)]
+pub enum MediaRole {
+    #[sea_orm(iden = "media_role")]
+    Enum,
+    #[sea_orm(iden = "Gallery")]
+    Gallery,
+    #[sea_orm(iden = "Description")]
+    Description,
+    #[sea_orm(iden = "Attachment")]
+    Attachment,
 }
