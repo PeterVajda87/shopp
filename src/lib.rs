@@ -77,7 +77,3 @@ pub fn config(cfg: &mut ServiceConfig) {
         .service(resource("/product/{id}").route(get().to(product_page)))
         .service(resource("/category/{id}").route(get().to(category_page)));
 }
-
-pub async fn seed_dummy_data() {
-    todo!()
-}
