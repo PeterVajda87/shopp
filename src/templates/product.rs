@@ -1,7 +1,7 @@
-use crate::structs::product::ProductWithSku;
+use crate::structs::product::ProductData;
 
 markup::define! {
-    ProductPage<'a>(title: &'a str, product_data: ProductWithSku) {
+    ProductPage<'a>(title: &'a str, product_data: ProductData) {
         @markup::doctype()
         html {
             { title }

@@ -28,6 +28,23 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        // Create mediaset table
+        manager
+        .create_table(
+            Table::create()
+                .table(MediaSet::Table)
+                .if_not_exists()
+                .col(
+                    ColumnDef::new(MediaSet::Id)
+                        .uuid()
+                        .not_null()
+                        .primary_key()
+                        .default(PgFunc::gen_random_uuid()),
+                )
+                .to_owned(),
+        )
+        .await?;
+
         // Create table product
         manager
             .create_table(
@@ -41,10 +58,63 @@ impl MigrationTrait for Migration {
                             .primary_key()
                             .default(PgFunc::gen_random_uuid()),
                     )
+                    .col(ColumnDef::new(Product::MediaSetId).uuid())
                     .col(
                         ColumnDef::new(Product::CreatedAt)
                             .timestamp_with_time_zone()
                             .extra("DEFAULT NOW()"),
+                    )
+                    .foreign_key(ForeignKey::create()
+                        .from(Product::Table, Product::MediaSetId)
+                        .to(MediaSet::Table, MediaSet::Id)
+                        .on_delete(ForeignKeyAction::Cascade)
+                        .on_update(ForeignKeyAction::Cascade)
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        // Create translation table for product
+        manager
+            .create_table(
+                Table::create()
+                    .table(ProductTranslation::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(ProductTranslation::ProductId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(ProductTranslation::LanguageId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(ColumnDef::new(ProductTranslation::Name).string().not_null())
+                    .col(
+                        ColumnDef::new(ProductTranslation::Description)
+                            .string()
+                            .not_null(),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(ProductTranslation::Table, ProductTranslation::LanguageId)
+                            .to(Language::Table, Language::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(ProductTranslation::Table, ProductTranslation::ProductId)
+                            .to(Product::Table, Product::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .primary_key(
+                        Index::create()
+                            .table(ProductTranslation::Table)
+                            .col(ProductTranslation::ProductId)
+                            .col(ProductTranslation::LanguageId),
                     )
                     .to_owned(),
             )
@@ -69,12 +139,70 @@ impl MigrationTrait for Migration {
                             .default(Expr::current_timestamp()),
                     )
                     .col(ColumnDef::new(Category::ParentCataegory).uuid())
+                    .col(ColumnDef::new(Category::MediaSetId).uuid())
                     .foreign_key(
                         ForeignKey::create()
                             .from(Category::Table, Category::ParentCataegory)
                             .to(Category::Table, Category::Id)
                             .on_delete(ForeignKeyAction::SetNull)
                             .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(Category::Table, Category::MediaSetId)
+                            .to(MediaSet::Table, MediaSet::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        // Create translation table for category
+        manager
+            .create_table(
+                Table::create()
+                    .table(CategoryTranslation::Table)
+                    .if_not_exists()
+                    .col(
+                        ColumnDef::new(CategoryTranslation::CategoryId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(CategoryTranslation::LanguageId)
+                            .uuid()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(CategoryTranslation::Name)
+                            .string()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(CategoryTranslation::Description)
+                            .string()
+                            .not_null(),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(CategoryTranslation::Table, CategoryTranslation::LanguageId)
+                            .to(Language::Table, Language::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(CategoryTranslation::Table, CategoryTranslation::CategoryId)
+                            .to(Category::Table, Category::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .primary_key(
+                        Index::create()
+                            .table(CategoryTranslation::Table)
+                            .col(CategoryTranslation::CategoryId)
+                            .col(CategoryTranslation::LanguageId),
                     )
                     .to_owned(),
             )
@@ -133,6 +261,52 @@ impl MigrationTrait for Migration {
                         ColumnDef::new(Sku::CreatedAt)
                             .date_time()
                             .default(Expr::current_timestamp()),
+                    )
+                    .col(ColumnDef::new(Sku::MediaSetId).uuid())
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(Sku::Table, Sku::MediaSetId)
+                            .to(MediaSet::Table, MediaSet::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        // Create translation table for sku
+        manager
+            .create_table(
+                Table::create()
+                    .table(SkuTranslation::Table)
+                    .if_not_exists()
+                    .col(ColumnDef::new(SkuTranslation::SkuId).uuid().not_null())
+                    .col(ColumnDef::new(SkuTranslation::LanguageId).uuid().not_null())
+                    .col(ColumnDef::new(SkuTranslation::Name).string().not_null())
+                    .col(
+                        ColumnDef::new(SkuTranslation::Description)
+                            .string()
+                            .not_null(),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(SkuTranslation::Table, SkuTranslation::LanguageId)
+                            .to(Language::Table, Language::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .foreign_key(
+                        ForeignKey::create()
+                            .from(SkuTranslation::Table, SkuTranslation::SkuId)
+                            .to(Sku::Table, Sku::Id)
+                            .on_delete(ForeignKeyAction::Cascade)
+                            .on_update(ForeignKeyAction::Cascade),
+                    )
+                    .primary_key(
+                        Index::create()
+                            .table(SkuTranslation::Table)
+                            .col(SkuTranslation::SkuId)
+                            .col(SkuTranslation::LanguageId),
                     )
                     .to_owned(),
             )
@@ -223,7 +397,7 @@ impl MigrationTrait for Migration {
                     )
                     .col(ColumnDef::new(Slug::EntityId).uuid().not_null())
                     .col(ColumnDef::new(Slug::LanguageId).uuid().not_null())
-                    .col(ColumnDef::new(Slug::Text).string().not_null())
+                    .col(ColumnDef::new(Slug::Text).string().not_null().unique_key())
                     .foreign_key(
                         ForeignKey::create()
                             .from(Slug::Table, Slug::LanguageId)
@@ -231,18 +405,6 @@ impl MigrationTrait for Migration {
                             .on_delete(ForeignKeyAction::Cascade)
                             .on_update(ForeignKeyAction::Cascade),
                     )
-                    .to_owned(),
-            )
-            .await?;
-
-        manager
-            .create_index(
-                Index::create()
-                    .if_not_exists()
-                    .name("idx-slug_text")
-                    .table(Slug::Table)
-                    .col(Slug::Text)
-                    .unique()
                     .to_owned(),
             )
             .await?;
@@ -270,22 +432,6 @@ impl MigrationTrait for Migration {
                             .not_null(),
                     )
                     .col(ColumnDef::new(Media::Path).string().not_null())
-                    .to_owned(),
-            )
-            .await?;
-
-        manager
-            .create_table(
-                Table::create()
-                    .table(MediaSet::Table)
-                    .if_not_exists()
-                    .col(
-                        ColumnDef::new(MediaSet::Id)
-                            .uuid()
-                            .not_null()
-                            .primary_key()
-                            .default(PgFunc::gen_random_uuid()),
-                    )
                     .to_owned(),
             )
             .await?;
@@ -321,28 +467,6 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        manager
-            .create_table(
-                Table::create()
-                    .table(MediaSetEntity::Table)
-                    .if_not_exists()
-                    .col(ColumnDef::new(MediaSetEntity::MediaSetId).uuid().not_null())
-                    .col(ColumnDef::new(MediaSetEntity::EntityId).uuid().not_null())
-                    .col(
-                        ColumnDef::new(MediaSetEntity::EntityType)
-                            .custom(EntityType::Enum)
-                            .not_null(),
-                    )
-                    .primary_key(
-                        Index::create()
-                            .table(MediaSetEntity::Table)
-                            .col(MediaSetEntity::MediaSetId)
-                            .col(MediaSetEntity::EntityId),
-                    )
-                    .to_owned(),
-            )
-            .await?;
-
         // Create UUIDs for sample data
         let language_uuid: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
         let language_uuid_2: Option<Box<Uuid>> = Some(Box::new(Uuid::new_v4()));
@@ -371,23 +495,36 @@ impl MigrationTrait for Migration {
 
         let insert_product: InsertStatement = Query::insert()
             .into_table(Product::Table)
-            .columns([Product::Name, Product::Id])
-            .values_panic([
-                "Skoda 120".into(),
-                SimpleExpr::Value(Value::Uuid(product_uuid.clone())),
-            ])
-            .values_panic([
-                "Skoda 105".into(),
-                SimpleExpr::Value(Value::Uuid(product_uuid_2.clone())),
-            ])
+            .columns([Product::Id])
+            .values_panic([SimpleExpr::Value(Value::Uuid(product_uuid.clone()))])
+            .values_panic([SimpleExpr::Value(Value::Uuid(product_uuid_2.clone()))])
             .to_owned();
 
         let insert_category: InsertStatement = Query::insert()
             .into_table(Category::Table)
-            .columns([Category::Name, Category::Id])
+            .columns([Category::Id])
+            .values_panic([SimpleExpr::Value(Value::Uuid(category_uuid.clone()))])
+            .to_owned();
+
+        let insert_category_translation = Query::insert()
+            .into_table(CategoryTranslation::Table)
+            .columns([
+                CategoryTranslation::CategoryId,
+                CategoryTranslation::LanguageId,
+                CategoryTranslation::Name,
+                CategoryTranslation::Description,
+            ])
             .values_panic([
-                "Cars".into(),
                 SimpleExpr::Value(Value::Uuid(category_uuid.clone())),
+                SimpleExpr::Value(Value::Uuid(language_uuid.clone())),
+                "Cars".into(),
+                "Great things, better than bikes".into(),
+            ])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(category_uuid.clone())),
+                SimpleExpr::Value(Value::Uuid(language_uuid_2.clone())),
+                "Autá".into(),
+                "Brm brm vrrrrrrm".into(),
             ])
             .to_owned();
 
@@ -404,16 +541,54 @@ impl MigrationTrait for Migration {
             ])
             .to_owned();
 
+        let insert_product_translation = Query::insert()
+            .into_table(ProductTranslation::Table)
+            .columns([
+                ProductTranslation::ProductId,
+                ProductTranslation::LanguageId,
+                ProductTranslation::Name,
+                ProductTranslation::Description,
+            ])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(product_uuid.clone())),
+                SimpleExpr::Value(Value::Uuid(language_uuid.clone())),
+                "Product Skoda 105".into(),
+                "Great product for that money!".into(),
+            ])
+            .values_panic([
+                SimpleExpr::Value(Value::Uuid(product_uuid_2.clone())),
+                SimpleExpr::Value(Value::Uuid(language_uuid_2.clone())),
+                "Produkt Škoda 110".into(),
+                "Za hodně peněz málo muziky!".into(),
+            ])
+            .to_owned();
+
         let insert_sku: InsertStatement = Query::insert()
             .into_table(Sku::Table)
-            .columns([Sku::Id, Sku::Name])
+            .columns([Sku::Id])
+            .values_panic([SimpleExpr::Value(Value::Uuid(sku_uuid.clone()))])
+            .values_panic([SimpleExpr::Value(Value::Uuid(sku_uuid_2.clone()))])
+            .to_owned();
+
+        let insert_sku_translation = Query::insert()
+            .into_table(SkuTranslation::Table)
+            .columns([
+                SkuTranslation::SkuId,
+                SkuTranslation::LanguageId,
+                SkuTranslation::Name,
+                SkuTranslation::Description,
+            ])
             .values_panic([
                 SimpleExpr::Value(Value::Uuid(sku_uuid.clone())),
+                SimpleExpr::Value(Value::Uuid(language_uuid.clone())),
                 "Family Sedan".into(),
+                "Now we a lot longer ass!".into(),
             ])
             .values_panic([
                 SimpleExpr::Value(Value::Uuid(sku_uuid_2.clone())),
-                "Sport Coupe".into(),
+                SimpleExpr::Value(Value::Uuid(language_uuid_2.clone())),
+                "Sport kupé".into(),
+                "Devadesát!".into(),
             ])
             .to_owned();
 
@@ -428,12 +603,19 @@ impl MigrationTrait for Migration {
 
         let insert_slug: InsertStatement = Query::insert()
             .into_table(Slug::Table)
-            .columns([Slug::Id, Slug::Text, Slug::EntityType, Slug::EntityId])
+            .columns([
+                Slug::Id,
+                Slug::Text,
+                Slug::EntityType,
+                Slug::EntityId,
+                Slug::LanguageId,
+            ])
             .values_panic([
                 SimpleExpr::Value(Value::Uuid(slug_uuid)),
                 "Auta".into(),
                 Expr::val("Product").as_enum(Alias::new("entity_type")),
                 SimpleExpr::Value(Value::Uuid(product_uuid.clone())),
+                SimpleExpr::Value(Value::Uuid(language_uuid.clone())),
             ])
             .to_owned();
 
@@ -445,6 +627,9 @@ impl MigrationTrait for Migration {
         manager.exec_stmt(insert_sku).await?;
         manager.exec_stmt(insert_sku_product).await?;
         manager.exec_stmt(insert_slug).await?;
+        manager.exec_stmt(insert_category_translation).await?;
+        manager.exec_stmt(insert_product_translation).await?;
+        manager.exec_stmt(insert_sku_translation).await?;
 
         Ok(())
     }
@@ -468,19 +653,35 @@ enum Language {
 enum Product {
     Table,
     Id,
+    CreatedAt,
+    MediaSetId
+}
+
+#[derive(DeriveIden)]
+enum ProductTranslation {
+    Table,
+    ProductId,
+    LanguageId,
     Name,
     Description,
-    CreatedAt,
 }
 
 #[derive(DeriveIden)]
 enum Category {
     Table,
     Id,
-    Name,
-    Description,
     ParentCataegory,
     CreatedAt,
+    MediaSetId
+}
+
+#[derive(DeriveIden)]
+enum CategoryTranslation {
+    Table,
+    CategoryId,
+    LanguageId,
+    Name,
+    Description,
 }
 
 #[derive(DeriveIden)]
@@ -494,9 +695,17 @@ enum ProductCategory {
 enum Sku {
     Table,
     Id,
+    CreatedAt,
+    MediaSetId
+}
+
+#[derive(DeriveIden)]
+enum SkuTranslation {
+    Table,
+    SkuId,
+    LanguageId,
     Name,
     Description,
-    CreatedAt,
 }
 
 #[derive(DeriveIden)]
@@ -512,13 +721,14 @@ enum Slug {
     Id,
     EntityId,
     EntityType,
+    LanguageId,
     Text,
 }
 
 #[derive(DeriveIden)]
 enum Media {
     Table,
-    Id,
+    Id, 
     MediaType,
     MediaRole,
     Path,
@@ -534,15 +744,7 @@ enum MediaSet {
 enum MediaMediaSet {
     Table,
     MediaId,
-    MediaSetId,
-}
-
-#[derive(DeriveIden)]
-enum MediaSetEntity {
-    Table,
-    MediaSetId,
-    EntityId,
-    EntityType,
+    MediaSetId
 }
 
 #[derive(DeriveIden)]

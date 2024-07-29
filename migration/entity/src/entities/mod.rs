@@ -8,6 +8,7 @@ pub mod language;
 pub mod media;
 pub mod media_media_set;
 pub mod media_set;
+pub mod media_set_entity;
 pub mod product;
 pub mod product_category;
 pub mod product_translation;

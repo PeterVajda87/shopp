@@ -6,6 +6,7 @@ pub use super::language::Entity as Language;
 pub use super::media::Entity as Media;
 pub use super::media_media_set::Entity as MediaMediaSet;
 pub use super::media_set::Entity as MediaSet;
+pub use super::media_set_entity::Entity as MediaSetEntity;
 pub use super::product::Entity as Product;
 pub use super::product_category::Entity as ProductCategory;
 pub use super::product_translation::Entity as ProductTranslation;
