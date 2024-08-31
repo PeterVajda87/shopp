@@ -1,8 +1,5 @@
 use crate::db::DB;
-use crate::entities::*;
-use crate::structs::sku::{SkuFields, SkuData};
 use ntex::web::{types::Path, HttpRequest, HttpResponse};
-use sea_orm::*;
 use uuid::Uuid;
 
 pub async fn sku_page(_req: HttpRequest, sku_id: Path<Uuid>) -> HttpResponse {

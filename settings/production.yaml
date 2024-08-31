@@ -5,6 +5,5 @@ database:
   username: postgres
   database_name: shopp
 ssl:
-  private_key_file: "settings/private.key"
-  certification_chain_file: "settings/certificate.crt"
-  ca_file: "settings/ca_bundle.crt"
+  private_key_file: "settings/key.pem"
+  certification_chain_file: "settings/cert.pem"

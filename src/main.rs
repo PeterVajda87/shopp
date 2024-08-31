@@ -1,13 +1,9 @@
-use migration::MigratorTrait;
 use openssl::ssl::{SslAcceptor, SslMethod};
-use shopp::db::DB;
 use shopp::{settings::RunMode, Run, RUN_MODE, SETTINGS};
 use std::net::TcpListener;
 
 #[ntex::main]
 async fn main() -> Result<(), std::io::Error> {
-    migration::Migrator::fresh(&*DB).await.unwrap();
-
     match *RUN_MODE {
         RunMode::Production => {
             let ssl_builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();

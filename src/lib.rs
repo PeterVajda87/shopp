@@ -1,10 +1,11 @@
 pub mod db;
-pub mod entities;
+pub mod middleware;
 pub mod routes;
 pub mod settings;
 pub mod structs;
 pub mod templates;
 
+use middleware::auth::JwtAuth;
 use ntex::web::{
     get, resource, types::Path, App, Error, HttpResponse, HttpServer, Responder, ServiceConfig,
 };
@@ -24,7 +25,7 @@ pub trait Run {
 
 impl Run for std::net::TcpListener {
     fn run(self, _settings: &Settings) -> Result<ntex::server::Server, std::io::Error> {
-        let server = HttpServer::new(move || App::new().configure(config))
+        let server = HttpServer::new(move || App::new().wrap(JwtAuth).configure(config))
             .listen(self)?
             .run();
         Ok(server)
@@ -38,9 +39,7 @@ impl Run for openssl::ssl::SslAcceptorBuilder {
                 .expect("Error loading private key file.");
             self.set_certificate_chain_file(&ssl.certification_chain_file)
                 .expect("Error loading certification chain file.");
-            self.set_ca_file(&ssl.ca_file)
-                .expect("CA bundle not found or could not be loaded.");
-            let server = HttpServer::new(move || App::new().configure(config))
+            let server = HttpServer::new(move || App::new().wrap(JwtAuth).configure(config))
                 .bind_openssl(("0.0.0.0", settings.application_port), self)?
                 .run();
 
