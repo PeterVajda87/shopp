@@ -5,15 +5,19 @@ pub mod settings;
 pub mod structs;
 pub mod templates;
 
+use language::Language;
 use middleware::auth::JwtAuth;
 use ntex::web::{
-    get, resource, types::Path, App, Error, HttpResponse, HttpServer, Responder, ServiceConfig,
+    get, post, resource,
+    types::{Json, Path},
+    App, Error, HttpRequest, HttpResponse, HttpServer, Responder, ServiceConfig,
 };
 use ntex_files as fs;
 use once_cell::sync::Lazy;
-use openssl::ssl::SslFiletype;
 use routes::*;
 use settings::{RunMode, Settings};
+use structs::*;
+use traits::{FromRequest, Storable};
 
 pub static RUN_MODE: Lazy<RunMode> = Lazy::new(|| RunMode::get());
 pub static SETTINGS: Lazy<Settings> =
@@ -35,7 +39,7 @@ impl Run for std::net::TcpListener {
 impl Run for openssl::ssl::SslAcceptorBuilder {
     fn run(mut self, settings: &Settings) -> Result<ntex::server::Server, std::io::Error> {
         if let Some(ssl) = &settings.ssl {
-            self.set_private_key_file(&ssl.private_key_file, SslFiletype::PEM)
+            self.set_private_key_file(&ssl.private_key_file, openssl::ssl::SslFiletype::PEM)
                 .expect("Error loading private key file.");
             self.set_certificate_chain_file(&ssl.certification_chain_file)
                 .expect("Error loading certification chain file.");
@@ -51,7 +55,7 @@ impl Run for openssl::ssl::SslAcceptorBuilder {
 }
 
 #[get("/health_check")]
-async fn health_check() -> impl Responder {
+async fn health_check(_req: HttpRequest) -> impl Responder {
     HttpResponse::Ok()
 }
 
@@ -68,11 +72,26 @@ async fn static_file(file_path: Path<String>) -> Result<fs::NamedFile, Error> {
     Ok(fs::NamedFile::open(format!("static/{file_path}"))?)
 }
 
+#[post("/create/create_language")]
+async fn create_language(req: Json<Language>) -> HttpResponse {
+    match Language::create_from_request(req).await {
+        Ok(new_lang) => match new_lang.insert().await {
+            Ok(_res) => HttpResponse::Ok().finish(),
+            Err(err) => {
+                println!("{:?}", err);
+                HttpResponse::InternalServerError().finish()
+            }
+        },
+        Err(_) => HttpResponse::InternalServerError().finish(), // Handle error case
+    }
+}
+
 pub fn config(cfg: &mut ServiceConfig) {
     cfg.service(health_check)
         .service(catalog_file)
         .service(route_by_slug)
         .service(static_file)
+        .service(create_language)
         .service(resource("/product/{id}").route(get().to(product_page)))
         .service(resource("/category/{id}").route(get().to(category_page)));
 }

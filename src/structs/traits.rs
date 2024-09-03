@@ -1,4 +1,5 @@
 use async_trait::async_trait;
+use sqlx::postgres::PgQueryResult;
 use uuid::Uuid;
 
 #[async_trait]
@@ -27,6 +28,22 @@ pub trait FilterById {
     async fn filter_by_id(ids: Vec<Uuid>) -> Result<Self, sqlx::Error>
     where
         Self: Sized + HasId;
+}
+
+#[async_trait]
+pub trait FromRequest<T> {
+    async fn create_from_request(
+        json_request: ntex::web::types::Json<T>,
+    ) -> Result<Self, sqlx::Error>
+    where
+        Self: Sized;
+}
+
+#[async_trait]
+pub trait Storable {
+    async fn insert(self) -> Result<PgQueryResult, sqlx::Error>
+    where
+        Self: Sized;
 }
 
 pub trait HasSkus {}

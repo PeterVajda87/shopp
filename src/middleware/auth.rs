@@ -1,21 +1,17 @@
 use chrono::{Duration, Utc};
 use jsonwebtoken::{decode, encode, Algorithm, DecodingKey, EncodingKey, Header, Validation};
-use ntex::http::header::HeaderName;
+use ntex::http::header::AUTHORIZATION;
 use ntex::service::{Middleware, Service, ServiceCtx};
 use ntex::web;
 use serde::{Deserialize, Serialize};
 
-// There are two steps in middleware processing.
-// 1. Middleware initialization, middleware factory gets called with
-//    next service in chain as parameter.
-// 2. Middleware's call method gets called with normal request.
 pub struct JwtAuth;
 
 #[derive(Debug, Serialize, Deserialize)]
-struct Claims {
-    sub: String,
-    lang: String,
-    exp: usize,
+pub struct Claims {
+    pub sub: String,
+    pub lang: String,
+    pub exp: usize,
 }
 
 const SECRET_KEY: &str = "your-very-secret-key";
@@ -73,11 +69,8 @@ where
             let token = encode_jwt(&claims);
             req.extensions_mut().insert(claims);
 
-            // Add the token to the response header
-            req.headers_mut().insert(
-                HeaderName::from_static("Authorization"),
-                format!("Bearer {}", token).parse().unwrap(),
-            );
+            req.headers_mut()
+                .insert(AUTHORIZATION, format!("Bearer {}", token).parse().unwrap());
         }
 
         let res = ctx.call(&self.service, req).await?;
@@ -86,7 +79,6 @@ where
     }
 }
 
-// Helper functions to create and encode JWTs
 fn create_anonymous_jwt() -> Claims {
     Claims {
         sub: "anonymous".to_string(),

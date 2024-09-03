@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS language (
-    language_id uuid NOT NULL UNIQUE,
+    language_id uuid NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     language_code VARCHAR(2) PRIMARY KEY,
     language_name VARCHAR(255) UNIQUE NOT NULL
 );
