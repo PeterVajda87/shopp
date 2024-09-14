@@ -14,7 +14,7 @@ CREATE TYPE entity_type AS ENUM ('product', 'category', 'sku', 'user');
 
 CREATE TABLE IF NOT EXISTS category (
     category_id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-    parent_category uuid REFERENCES category(category_id)
+    parent_category_id uuid REFERENCES category(category_id)
 );
 
 CREATE TABLE IF NOT EXISTS slug (

@@ -2281,6 +2281,7 @@ dependencies = [
  "chrono",
  "config",
  "curl",
+ "futures",
  "jsonwebtoken",
  "markup",
  "ntex",

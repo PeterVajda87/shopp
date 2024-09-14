@@ -16,7 +16,7 @@ use ntex_files as fs;
 use once_cell::sync::Lazy;
 use routes::*;
 use settings::{RunMode, Settings};
-use structs::*;
+use structs::{category::Category, *};
 use traits::{FromRequest, Storable};
 
 pub static RUN_MODE: Lazy<RunMode> = Lazy::new(|| RunMode::get());
@@ -86,12 +86,27 @@ async fn create_language(req: Json<Language>) -> HttpResponse {
     }
 }
 
+#[post("/create/create_category")]
+async fn create_category(req: Json<Category>) -> HttpResponse {
+    match Category::create_from_request(req).await {
+        Ok(new_cat) => match new_cat.insert().await {
+            Ok(_res) => HttpResponse::Ok().finish(),
+            Err(err) => {
+                println!("{:?}", err);
+                HttpResponse::InternalServerError().finish()
+            }
+        },
+        Err(_) => HttpResponse::InternalServerError().finish(), // Handle error case
+    }
+}
+
 pub fn config(cfg: &mut ServiceConfig) {
     cfg.service(health_check)
         .service(catalog_file)
         .service(route_by_slug)
         .service(static_file)
         .service(create_language)
+        .service(create_category)
         .service(resource("/product/{id}").route(get().to(product_page)))
         .service(resource("/category/{id}").route(get().to(category_page)));
 }

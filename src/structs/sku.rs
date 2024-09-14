@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use uuid::Uuid;
 
-#[derive(FromRow, sqlx::Type, Serialize, Deserialize)]
+#[derive(FromRow, sqlx::Type, Serialize, Deserialize, Debug)]
 pub struct Sku {
     sku_id: Uuid,
     name: String,

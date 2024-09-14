@@ -2,10 +2,11 @@ use super::sku::Sku;
 use super::traits::{AddSkus, HasId, HasSkus};
 use crate::db::DB_POOL;
 use async_trait::async_trait;
+use serde::Deserialize;
 use sqlx::FromRow;
 use uuid::Uuid;
 
-#[derive(FromRow)]
+#[derive(FromRow, Deserialize, Debug)]
 pub struct Product {
     product_id: Uuid,
     name: String,

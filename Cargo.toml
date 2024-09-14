@@ -39,6 +39,7 @@ sqlx = { version = "*", features = [
     "postgres",
     "uuid",
 ] }
+futures = { version = "*" }
 chrono = { version = "*" }
 
 [dev-dependencies]
